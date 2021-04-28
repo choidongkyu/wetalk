@@ -1,4 +1,4 @@
-package com.example.wetalk
+package com.dkchoi.wetalk
 
 import org.junit.Test
 
