@@ -1,10 +1,13 @@
 package com.dkchoi.wetalk
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
 import android.telephony.SmsManager
+import android.telephony.TelephonyManager
+import android.text.Editable
 import android.util.Log
 import android.view.MenuItem
 import android.widget.EditText
@@ -77,12 +80,16 @@ class RegisterActivity : AppCompatActivity() {
                 progressDialog.dismiss()
 
                 Toast.makeText(this@RegisterActivity, "인증번호를 발송하였습니다", Toast.LENGTH_SHORT).show()
-                var intent: Intent = Intent(this@RegisterActivity, CertificationActivity::class.java)
+                var intent: Intent =
+                    Intent(this@RegisterActivity, CertificationActivity::class.java)
                 //code 비교 위한 verification id 전달
                 intent.putExtra("verification", verificationId)
                 startActivity(intent)
             }
         }
+
+        //디바이스 번호 자동입력
+        binding.inputEt.text = getPhoneNumber()
 
     }
 
@@ -131,4 +138,19 @@ class RegisterActivity : AppCompatActivity() {
             .build()
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
+
+    @SuppressLint("MissingPermission")
+    private fun getPhoneNumber(): Editable? {
+        val telManager:TelephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+        val phoneNumber: String = telManager.line1Number
+        return phoneNumber.toEditable()
+    }
+
+
+
+    companion object {
+        //String을 editable 객체로 만들어주는 메소드
+        fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
+    }
+
 }

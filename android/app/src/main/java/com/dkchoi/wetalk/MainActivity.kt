@@ -10,7 +10,13 @@ import com.google.android.material.button.MaterialButton
 
 
 class MainActivity : AppCompatActivity() {
-    private val permissions = arrayOf<String>(Manifest.permission.SEND_SMS)
+    private val permissions = arrayOf<String>(
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.SEND_SMS,
+        Manifest.permission.READ_SMS,
+        Manifest.permission.RECEIVE_SMS
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -20,9 +26,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-//        if (!hasPermissions(*permissions)) {
-//            ActivityCompat.requestPermissions(this, permissions, 1)
-//        }
+        if (!hasPermissions(*permissions)) {
+            ActivityCompat.requestPermissions(this, permissions, 1)
+        }
     }
 
 

@@ -39,7 +39,8 @@
         android:background="@drawable/edittext_borer"
         app:layout_constraintTop_toBottomOf="@+id/description_TextView"
         app:layout_constraintStart_toStartOf="@id/description_TextView"
-        android:hint="   인증번호를 입력해 주세요."/>
+        android:hint="인증번호를 입력해 주세요."
+        android:paddingLeft="20dp"/>
 
     <ImageView
         android:id="@+id/next_imageView"
