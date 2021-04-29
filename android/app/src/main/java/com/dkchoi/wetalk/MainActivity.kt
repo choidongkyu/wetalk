@@ -29,13 +29,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (Util.getSession(this) != null) {// 세션이 존재한다면 바로 home 화면으로 이동
-            val intent: Intent =
-                Intent(this@MainActivity, HomeActivity::class.java)
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(intent)
-        }
-
         //retrofit init
         val retrofit: Retrofit = Retrofit.Builder()
             .baseUrl(BackendInterface.BASE_URL)

@@ -135,9 +135,17 @@ class CertificationActivity : AppCompatActivity() {
                     override fun onResponse(call: Call<Int>, response: Response<Int>) {
                         if (response.body() == RESPONSE_OK) {
                             //회원가입 완료시 home 화면 이동
+                            Toast.makeText(
+                                this@CertificationActivity,
+                                "회원가입이 완료 되었습니다.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
                             val intent: Intent =
                                 Intent(this@CertificationActivity, HomeActivity::class.java)
+
                             Util.setSession(phone, this@CertificationActivity) //session setting
+
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             startActivity(intent)
                         } else if (response.body() == RESPONSE_DUPLICATE) { //중복된 핸드폰 번호가 있을 경우
@@ -149,10 +157,11 @@ class CertificationActivity : AppCompatActivity() {
 
                             val intent: Intent =
                                 Intent(this@CertificationActivity, HomeActivity::class.java)
+
                             Util.setSession(phone, this@CertificationActivity) //session setting
+
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             startActivity(intent)
-
                         } else {
                             Toast.makeText(
                                 this@CertificationActivity,

@@ -12,6 +12,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.dkchoi.wetalk.util.Util
 
 class SplashActivity : AppCompatActivity() {
 
@@ -19,7 +20,8 @@ class SplashActivity : AppCompatActivity() {
         Manifest.permission.READ_PHONE_STATE,
         Manifest.permission.SEND_SMS,
         Manifest.permission.READ_SMS,
-        Manifest.permission.RECEIVE_SMS
+        Manifest.permission.RECEIVE_SMS,
+        Manifest.permission.READ_CONTACTS,
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,10 +32,18 @@ class SplashActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, permissions, 1) //권한 요청
         } else { //권한이 있다면
             Handler(Looper.getMainLooper()).postDelayed(Runnable {
-                val intent: Intent =
-                    Intent(this@SplashActivity, MainActivity::class.java)
+                var intent: Intent? = null
+                if (Util.getSession(this) != null) {// 세션이 존재한다면 바로 home 화면으로 이동
+                    intent =
+                        Intent(this@SplashActivity, HomeActivity::class.java)
+                } else { //그렇지 않다면 로그인 화면 으로 이동
+                    intent =
+                        Intent(this@SplashActivity, MainActivity::class.java)
+
+                }
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(intent)
+
             }, 1000)
         }
     }
@@ -58,19 +68,20 @@ class SplashActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         var allGrant: Boolean = true;
-        for(grantResult in grantResults) {
-            if(grantResult != PackageManager.PERMISSION_GRANTED) {
+        for (grantResult in grantResults) {
+            if (grantResult != PackageManager.PERMISSION_GRANTED) {
                 allGrant = false
             }
         }
 
-        if(allGrant) {//전체 권한이 승인된 경우 activity 이동
+        if (allGrant) {//전체 권한이 승인된 경우 activity 이동
             val intent: Intent =
                 Intent(this@SplashActivity, MainActivity::class.java)
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
-        }else { //승인되지 않은 권한이 있을 경우
-            Toast.makeText(this@SplashActivity, "앱을 실행시키기 위해서는 모든 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        } else { //승인되지 않은 권한이 있을 경우
+            Toast.makeText(this@SplashActivity, "앱을 실행시키기 위해서는 모든 권한이 필요합니다.", Toast.LENGTH_SHORT)
+                .show()
             finish()
         }
     }
