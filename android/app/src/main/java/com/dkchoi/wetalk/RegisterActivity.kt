@@ -142,7 +142,11 @@ class RegisterActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun getPhoneNumber(): Editable? {
         val telManager:TelephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-        val phoneNumber: String = telManager.line1Number
+        var phoneNumber: String = telManager.line1Number
+        //kt의 경우 국가번호 +82가 붙지만 그외에 통신사는 붙지 않음 때문에 국가번호를 붙여줘야함
+        if(!phoneNumber.contains("+82")) {
+            phoneNumber = phoneNumber.replaceFirst("0", "+82")
+        }
         return phoneNumber.toEditable()
     }
 
