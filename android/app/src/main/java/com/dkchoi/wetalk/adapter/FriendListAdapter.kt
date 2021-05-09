@@ -8,20 +8,25 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.dkchoi.wetalk.R
 
-class FriendListAdapter(private val friendList: MutableList<String>, private val context: Context): RecyclerView.Adapter<FriendListAdapter.ViewHolder>() {
+class FriendListAdapter(): RecyclerView.Adapter<FriendListAdapter.ViewHolder>() {
+    private var friendList: List<String> = listOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        var view: View = LayoutInflater.from(parent.context).inflate(R.layout.friends_list_item, parent, false)
+        val view: View = LayoutInflater.from(parent.context).inflate(R.layout.friends_list_item, parent, false)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        var name: String = friendList.get(position)
+        val name: String = friendList.get(position)
         holder.friendName.text = name
     }
 
     override fun getItemCount(): Int {
         return friendList.size
+    }
+
+    fun updateItem(friendList: List<String>) {
+        this.friendList = friendList
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
