@@ -47,7 +47,7 @@ class Util {
             val projection = arrayOf(
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID, // 인덱스 값, 중복될 수 있음 -- 한 사람 번호가 여러개인 경우
                 ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.NUMBER
             )
 
             // 4. ContentResolver로 쿼리를 날림 -> resolver 가 provider 에게 쿼리하겠다고 요청

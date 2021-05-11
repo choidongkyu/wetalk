@@ -1,8 +1,14 @@
 package com.dkchoi.wetalk
 
+import android.util.Log
+import com.dkchoi.wetalk.retrofit.BackendInterface
+import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import org.junit.Test
 
 import org.junit.Assert.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -10,6 +16,8 @@ import org.junit.Assert.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+    private val TAG: String = javaClass.simpleName
+
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)

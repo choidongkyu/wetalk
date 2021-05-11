@@ -7,13 +7,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.telephony.SmsMessage
-import android.util.Log
 import android.view.MenuItem
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.dkchoi.wetalk.RegisterActivity.Companion.toEditable
 import com.dkchoi.wetalk.databinding.ActivityCertificationBinding
 import com.dkchoi.wetalk.retrofit.BackendInterface
+import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.util.Util
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -21,8 +23,6 @@ import com.google.firebase.auth.PhoneAuthProvider
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -60,19 +60,11 @@ class CertificationActivity : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
 
         binding.nextImageView.setOnClickListener {
-            var code: String = binding.codeEt.text.toString().trim()
-
-            verifyPhoneNumberWithCode(mVerificationId, code)
+            showSetNameDialog()
         }
 
-        //retrofit init
-        val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl(BackendInterface.BASE_URL)
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .build()
 
-        server = retrofit.create(BackendInterface::class.java)
-        //
+        server = ServiceGenerator.retrofitSignUp.create(BackendInterface::class.java)
 
         //문자 받는 브로드캐스트리시버
         smsReceiver = object : BroadcastReceiver() {
@@ -115,14 +107,14 @@ class CertificationActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun verifyPhoneNumberWithCode(verificationId: String?, code: String) {
+    private fun verifyPhoneNumberWithCode(verificationId: String?, code: String, userName: String) {
         progressDialog.show()
 
         val credential = PhoneAuthProvider.getCredential(verificationId, code)
-        signInWithPhoneAuthCredential(credential)
+        signInWithPhoneAuthCredential(credential, userName)
     }
 
-    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
+    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential, userName: String) {
         progressDialog.setMessage("회원가입 처리중 ...")
         firebaseAuth.signInWithCredential(credential)
             .addOnSuccessListener {
@@ -131,7 +123,7 @@ class CertificationActivity : AppCompatActivity() {
 
                 val phone = firebaseAuth.currentUser.phoneNumber
                 //서버에 회원가입 요청
-                server.setUserRegister(phone).enqueue(object : Callback<Int> {
+                server.setUserRegister(phone, userName).enqueue(object : Callback<Int> {
                     override fun onResponse(call: Call<Int>, response: Response<Int>) {
                         if (response.body() == RESPONSE_OK) {
                             //회원가입 완료시 home 화면 이동
@@ -141,13 +133,16 @@ class CertificationActivity : AppCompatActivity() {
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            val intent: Intent =
-                                Intent(this@CertificationActivity, HomeActivity::class.java)
+                            val intent: Intent = Intent(this@CertificationActivity, HomeActivity::class.java)
 
-                            Util.setSession(phone, this@CertificationActivity) //session setting
+                            Util.setSession(
+                                firebaseAuth.currentUser.phoneNumber,
+                                this@CertificationActivity
+                            ) //session setting
 
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             startActivity(intent)
+
                         } else if (response.body() == RESPONSE_DUPLICATE) { //중복된 핸드폰 번호가 있을 경우
                             Toast.makeText(
                                 this@CertificationActivity,
@@ -203,6 +198,26 @@ class CertificationActivity : AppCompatActivity() {
     override fun onDestroy() {
         unregisterReceiver(smsReceiver)
         super.onDestroy()
+    }
+
+    //사용자 이름을 setting 하는 다이어로그
+    private fun showSetNameDialog() {
+        var code: String = binding.codeEt.text.toString().trim()
+        val editText = EditText(this)
+        val dialog: AlertDialog.Builder = AlertDialog.Builder(this)
+        dialog.setTitle("사용자 이름 설정")
+        dialog.setMessage("프로필 이름을 입력 해주세요.")
+        dialog.setView(editText)
+        dialog.setPositiveButton("확인") { _, _ ->
+            val userName = editText.text.toString().trim()
+            verifyPhoneNumberWithCode(mVerificationId, code, userName)
+        }
+
+        dialog.setNegativeButton("취소") { _, _ ->
+            //nothing
+        }
+
+        dialog.show()
     }
 
     companion object {
