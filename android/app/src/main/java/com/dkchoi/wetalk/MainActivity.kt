@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-        server = ServiceGenerator.retrofitSignUp.create(BackendInterface::class.java)
+        server = ServiceGenerator.retrofit.create(BackendInterface::class.java)
 
         val registerButton = findViewById<MaterialButton>(R.id.register_button)
         registerButton.setOnClickListener {

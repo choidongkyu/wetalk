@@ -1,14 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragment.ProfileFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="프로필" />
+        android:background="@drawable/background">
 
+        <ImageView
+            android:id="@+id/profileImg"
+            android:layout_width="121dp"
+            android:layout_height="156dp"
+            android:layout_marginTop="296dp"
+            android:src="@drawable/ic_baseline_account_circle_24_black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="프로필 이미지" />
+
+        <TextView
+            android:id="@+id/profileName"
+            android:layout_width="126dp"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textSize="25sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileImg"
+            tools:text="최동규" />
+
+        <TextView
+            android:id="@+id/profileTxt"
+            android:layout_width="324dp"
+            android:layout_height="34dp"
+            android:gravity="center"
+            android:textColor="#8A8686"
+            android:textSize="15sp"
+            tools:text="상태 메시지를 입력해주세요."
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileName"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

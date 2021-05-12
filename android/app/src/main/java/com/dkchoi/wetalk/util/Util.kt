@@ -1,12 +1,19 @@
 package com.dkchoi.wetalk.util
 
+import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import android.content.SharedPreferences
 import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
+import android.util.Log
+import androidx.room.Room
 import com.dkchoi.wetalk.data.PhoneBook
+import com.dkchoi.wetalk.data.User
+import com.dkchoi.wetalk.retrofit.BackendInterface
+import com.dkchoi.wetalk.retrofit.ServiceGenerator
+import com.dkchoi.wetalk.room.UserDatabase
 
 class Util {
     companion object {
@@ -74,6 +81,78 @@ class Util {
             // 데이터 계열은 반드시 닫아줘야 한다.
             cursor?.close()
             return datas
+        }
+
+        fun setMyStatueMsg(msg: String, context: Context) {
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(
+                    Config.MY_PROFILE,
+                    Context.MODE_PRIVATE
+                ) //session에 관련된 pref를 얻어옴
+
+            val editor = sharedPreferences.edit()
+            editor.putString(Config.MY_STATUS, msg) //상태메시지를 sharedPref에 저장
+            editor.apply()
+        }
+
+        fun getMyStatusMsg(context: Context): String? {
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(Config.MY_PROFILE, Context.MODE_PRIVATE)
+            return sharedPreferences.getString(Config.MY_STATUS, null)
+        }
+
+        fun setMyName(msg: String, context: Context) {
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(
+                    Config.MY_PROFILE,
+                    Context.MODE_PRIVATE
+                ) //session에 관련된 pref를 얻어옴
+
+            val editor = sharedPreferences.edit()
+            editor.putString(Config.MY_NAME, msg) //상태메시지를 sharedPref에 저장
+            editor.apply()
+        }
+
+        fun getMyName(context: Context): String? {
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(Config.MY_PROFILE, Context.MODE_PRIVATE)
+            return sharedPreferences.getString(Config.MY_NAME, null)
+        }
+
+        suspend fun fetchUserData(application: Application) {
+            // 서버에서 받아온 유저 정보를 데이터베이스에 저장하기 위해 db객체 생성
+            val db = Room.databaseBuilder(
+                application,
+                UserDatabase::class.java, "user-database"
+            )
+                .allowMainThreadQueries()
+                .build()
+
+            val phoneBooks: List<PhoneBook> = Util.getContacts(application) //전화번호부 가져옴
+
+            //유저정보를 받기위한 retrofit 객체 생성
+            val server = ServiceGenerator.retrofitUser.create(BackendInterface::class.java)
+            val friendList = mutableListOf<User>()
+            val userList = server.getUserList()
+
+            //서버에서 받아온 user 리스트와 전화번호부 비교하여 친구리스트 생성
+            for (user in userList) {
+                for (phoneBook in phoneBooks) {
+                    var result = phoneBook.tel?.replace("-", "") // '-' 제거
+                    result = result?.replaceFirst("0", "+82")
+                    if (user.id == result) { //서버에 있는 유저가 전화번호부에 있다면
+                        friendList.add(user) // 추가
+                    }
+
+                    //에뮬레이터 번호 예외처리, 테스트용으로 list에 추가
+                    if (user.name == "에뮬레이터" && phoneBook.name == "에뮬레이터") {
+                        friendList.add(user)
+                    }
+                }
+            }
+            if (friendList.size != 0) {
+                db.userDao().insertAll(*friendList.toTypedArray())
+            }
         }
     }
 }

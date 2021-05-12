@@ -28,6 +28,7 @@ class FriendListAdapter(): RecyclerView.Adapter<FriendListAdapter.ViewHolder>() 
 
     fun updateItem(friendList: List<User>) {
         this.friendList = friendList
+        notifyDataSetChanged()
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

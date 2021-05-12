@@ -64,7 +64,7 @@ class CertificationActivity : AppCompatActivity() {
         }
 
 
-        server = ServiceGenerator.retrofitSignUp.create(BackendInterface::class.java)
+        server = ServiceGenerator.retrofit.create(BackendInterface::class.java)
 
         //문자 받는 브로드캐스트리시버
         smsReceiver = object : BroadcastReceiver() {
@@ -74,12 +74,8 @@ class CertificationActivity : AppCompatActivity() {
                     val bundle = intent.extras
                     val messages = parseSmsMessage(bundle!!)
 
-                    if (messages!!.size > 0) {
+                    if (messages!!.isNotEmpty()) {
                         val content = messages[0]!!.messageBody.toString()
-                        //인증코드 메시지에 국외발신 키워드가 없다면 우리가 보낸 메시지가 아니므로 return
-                        if (!content.contains("[국외발신]")) {
-                            return
-                        }
                         val pattern: Pattern =
                             Pattern.compile("\\d\\d\\d\\d\\d\\d") // 숫자 6자리 패턴만 가져오도록 패턴 설정
                         val matcher: Matcher = pattern.matcher(content)

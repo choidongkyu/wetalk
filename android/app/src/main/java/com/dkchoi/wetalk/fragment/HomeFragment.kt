@@ -1,11 +1,15 @@
 package com.dkchoi.wetalk.fragment
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -42,6 +46,9 @@ class HomeFragment : Fragment() {
         val friendNumber: TextView = view.findViewById(R.id.friend_number)
         val myName: TextView = view.findViewById(R.id.myProfileName)
         val friendRecyclerView: RecyclerView = view.findViewById(R.id.friend_recyclerView)
+        val refreshButton: ImageView = view.findViewById(R.id.refresh_button)
+        val progressBar: ProgressBar = view.findViewById(R.id.progressbar)
+
         val friendListAdapter = FriendListAdapter()
         friendRecyclerView.apply {
             adapter = friendListAdapter
@@ -50,14 +57,27 @@ class HomeFragment : Fragment() {
 
 
         homeFragmentViewModel.apply {
-            friendListLiveData.observe(viewLifecycleOwner, Observer {
+            getUserList().observe(viewLifecycleOwner, Observer {
                 friendListAdapter.updateItem(it)
-                friendNumber.text = "${homeFragmentViewModel.friendListLiveData.value?.size}명"
+                friendNumber.text = "${it.size}명"
             })
             myNameLiveData.observe(viewLifecycleOwner, Observer {
                 myName.text = it
             })
+        }
 
+
+        //새로고침 버튼을 누를시 user refresh
+        refreshButton.setOnClickListener {
+            activity?.let { it ->
+                lifecycleScope.launch(Dispatchers.Main) {
+                    progressBar.visibility = View.VISIBLE
+                    withContext(Dispatchers.IO) {
+                        homeFragmentViewModel.refreshUserList(it.application)
+                    }
+                    progressBar.visibility = View.GONE
+                }
+            }
         }
 
         friendRecyclerView.addItemDecoration(RecyclerViewDecoration(30)) // 아이템간 간격 설정
