@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.dkchoi.wetalk.RegisterActivity.Companion.toEditable
 import com.dkchoi.wetalk.databinding.ActivityCertificationBinding
 import com.dkchoi.wetalk.retrofit.BackendInterface
@@ -20,6 +21,7 @@ import com.dkchoi.wetalk.util.Util
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthProvider
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -129,17 +131,23 @@ class CertificationActivity : AppCompatActivity() {
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            val intent: Intent = Intent(this@CertificationActivity, HomeActivity::class.java)
+                            lifecycleScope.launch {
+                                Util.fetchMyData(application)
+                                val intent: Intent = Intent(this@CertificationActivity, HomeActivity::class.java)
 
-                            Util.setSession(
-                                firebaseAuth.currentUser.phoneNumber,
-                                this@CertificationActivity
-                            ) //session setting
+                                Util.setSession(
+                                    firebaseAuth.currentUser.phoneNumber,
+                                    this@CertificationActivity
+                                ) //session setting
 
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            startActivity(intent)
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                startActivity(intent)
+                            }
 
                         } else if (response.body() == RESPONSE_DUPLICATE) { //중복된 핸드폰 번호가 있을 경우
+                            lifecycleScope.launch {
+                                Util.fetchMyData(application)
+                            }
                             Toast.makeText(
                                 this@CertificationActivity,
                                 "가입된 핸드폰번호가 있습니다. 해당 번호로 로그인 합니다.",

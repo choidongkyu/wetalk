@@ -1,14 +1,23 @@
 package com.dkchoi.wetalk.util
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.app.Service
 import android.content.ContentResolver
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
+import android.telephony.TelephonyManager
+import android.text.Editable
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.room.Room
+import com.dkchoi.wetalk.RegisterActivity.Companion.toEditable
+import com.dkchoi.wetalk.SplashActivity
 import com.dkchoi.wetalk.data.PhoneBook
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.retrofit.BackendInterface
@@ -17,6 +26,7 @@ import com.dkchoi.wetalk.room.UserDatabase
 
 class Util {
     companion object {
+        const val profileImgPath = "http://49.247.19.12/profile_image";
         fun setSession(id: String, context: Context) {
             val sharedPreferences: SharedPreferences =
                 context.getSharedPreferences(
@@ -95,6 +105,24 @@ class Util {
             editor.apply()
         }
 
+        fun setMyImg(msg: String, context: Context) {
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(
+                    Config.MY_PROFILE,
+                    Context.MODE_PRIVATE
+                ) //session에 관련된 pref를 얻어옴
+
+            val editor = sharedPreferences.edit()
+            editor.putString(Config.MY_IMG, msg) //이미지 키를 sharedPref에 저장
+            editor.apply()
+        }
+
+        fun getMyImg(context: Context): String? {
+            val sharedPreferences: SharedPreferences =
+                context.getSharedPreferences(Config.MY_PROFILE, Context.MODE_PRIVATE)
+            return sharedPreferences.getString(Config.MY_IMG, null)
+        }
+
         fun getMyStatusMsg(context: Context): String? {
             val sharedPreferences: SharedPreferences =
                 context.getSharedPreferences(Config.MY_PROFILE, Context.MODE_PRIVATE)
@@ -153,6 +181,54 @@ class Util {
             if (friendList.size != 0) {
                 db.userDao().insertAll(*friendList.toTypedArray())
             }
+        }
+
+        //내정보를 서버에서 갖고 오기 위한 메소드
+        suspend fun fetchMyData(context: Context) {
+            val server = ServiceGenerator.retrofitUser.create(BackendInterface::class.java)
+            val user = server.getUser(getPhoneNumber(context))
+            Log.d(
+                "test11",
+                "name = ${user.name}, 상태 = ${user.profileText}, 이미지 = ${user.profileImage}"
+            )
+            if (user.profileImage != null) {
+                setMyImg(user.profileImage!!, context)
+            } else {
+                setMyImg("null", context)
+            }
+
+            if (user.profileText != null) {
+                setMyStatueMsg(user.profileText!!, context)
+            } else {
+                setMyStatueMsg("", context)
+            }
+            setMyName(user.name, context)
+        }
+
+
+        // 해당 기능의 권한이 있는지 확인할 수 있는 메소드
+        fun hasPermissions(permissions: Array<String>, context: Context): Boolean {
+            for (permission in permissions) {
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        permission
+                    ) != PackageManager.PERMISSION_GRANTED
+                )
+                    return false
+            }
+            return true
+        }
+
+        @SuppressLint("MissingPermission")
+        fun getPhoneNumber(context: Context): String {
+            val telManager: TelephonyManager =
+                context.getSystemService(AppCompatActivity.TELEPHONY_SERVICE) as TelephonyManager
+            var phoneNumber: String = telManager.line1Number
+            //kt의 경우 국가번호 +82가 붙지만 그외에 통신사는 붙지 않음 때문에 국가번호를 붙여줘야함
+            if (!phoneNumber.contains("+82")) {
+                phoneNumber = phoneNumber.replaceFirst("0", "+82")
+            }
+            return phoneNumber
         }
     }
 }

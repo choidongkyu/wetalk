@@ -2,6 +2,8 @@ package com.dkchoi.wetalk.retrofit
 
 import com.dkchoi.wetalk.HomeActivity
 import com.dkchoi.wetalk.data.User
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -30,6 +32,11 @@ interface BackendInterface {
     @GET("user.php?request=getUserList")
     suspend fun getUserList(): List<User>
 
+    @GET("user.php?request=getUser")
+    suspend fun getUser(
+        @Query("phone") phone: String
+    ): User
+
     @GET("user.php?request=getStatusMsg")
     suspend fun getStatusMsg(
         @Query("phone") phone: String
@@ -41,4 +48,12 @@ interface BackendInterface {
         @Field("phone") phone: String?,
         @Field("status_msg") msg: String
     ): Int
+
+    @Multipart
+    @POST("upload.php")
+    suspend fun uploadFile(
+        @Part file: MultipartBody.Part,
+        @Part("id") requestBody: RequestBody
+    ): Int
+
 }

@@ -7,5 +7,6 @@ class Config {
         const val MY_PROFILE = "My_Profile"
         const val MY_STATUS = "My_Status"
         const val MY_NAME = "My_Name"
+        const val MY_IMG = "My_Img"
     }
 }
