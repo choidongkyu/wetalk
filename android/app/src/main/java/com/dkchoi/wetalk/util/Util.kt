@@ -179,6 +179,7 @@ class Util {
                 }
             }
             if (friendList.size != 0) {
+                friendList.sortBy { it.name }
                 db.userDao().insertAll(*friendList.toTypedArray())
             }
         }

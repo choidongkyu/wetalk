@@ -65,6 +65,7 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
             }
         }
         if(friendList.size != 0) {
+            friendList.sortBy { it.name }
             db.userDao().insertAll(*friendList.toTypedArray())
         }
     }
@@ -99,6 +100,7 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
             }
         }
         if(friendList.size != 0) {
+            friendList.sortBy { it.name }
             db.userDao().insertAll(*friendList.toTypedArray())
         }
     }
