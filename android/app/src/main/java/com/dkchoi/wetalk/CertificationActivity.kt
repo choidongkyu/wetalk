@@ -191,7 +191,7 @@ class CertificationActivity : AppCompatActivity() {
 
     private fun parseSmsMessage(bundle: Bundle): Array<SmsMessage?>? {
         // PDU: Protocol Data Units
-        val objs = bundle["pdus"] as Array<Any>?
+        val objs = bundle["pdus"] as Array<*>?
         val messages: Array<SmsMessage?> = arrayOfNulls<SmsMessage>(objs!!.size)
         for (i in objs!!.indices) {
             messages[i] = SmsMessage.createFromPdu(objs[i] as ByteArray)
@@ -206,7 +206,7 @@ class CertificationActivity : AppCompatActivity() {
 
     //사용자 이름을 setting 하는 다이어로그
     private fun showSetNameDialog() {
-        var code: String = binding.codeEt.text.toString().trim()
+        val code: String = binding.codeEt.text.toString().trim()
         val editText = EditText(this)
         val dialog: AlertDialog.Builder = AlertDialog.Builder(this)
         dialog.setTitle("사용자 이름 설정")
