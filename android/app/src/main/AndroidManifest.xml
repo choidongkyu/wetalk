@@ -22,7 +22,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeTalk"
         android:usesCleartextTraffic="true">
-        <activity android:name=".ProfileMsgEditActivity"></activity>
+        <activity android:name=".ProfileActivity"></activity>
+        <activity android:name=".ProfileMsgEditActivity" />
         <activity
             android:name=".SplashActivity"
             android:theme="@style/SplashTheme">

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background"
+        tools:context=".ProfileActivity">
+
+        <ImageView
+            android:id="@+id/profileImg"
+            android:layout_width="121dp"
+            android:layout_height="156dp"
+            android:layout_marginTop="296dp"
+            android:contentDescription="프로필 이미지"
+            android:src="@drawable/ic_baseline_account_circle_24_black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/profileName"
+            android:layout_width="126dp"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:textSize="25sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileImg"
+            tools:text="최동규" />
+
+        <TextView
+            android:id="@+id/profileTxt"
+            android:layout_width="324dp"
+            android:layout_height="34dp"
+            android:gravity="center"
+            android:textColor="#8A8686"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileName"
+            tools:text="상태 메시지를 입력해주세요." />
+
+        <ProgressBar
+            android:id="@+id/progressbar"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/close_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_close_24" />
+
+        <ImageView
+            android:id="@+id/chat_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/call_btn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileTxt"
+            app:layout_constraintVertical_bias="0.2"
+            app:srcCompat="@drawable/ic_baseline_chat_24" />
+
+        <ImageView
+            android:id="@+id/call_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileTxt"
+            app:layout_constraintVertical_bias="0.2"
+            app:srcCompat="@drawable/ic_baseline_call_24" />
+
+        <ImageView
+            android:id="@+id/video_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/call_btn"
+            app:layout_constraintTop_toBottomOf="@+id/profileTxt"
+            app:layout_constraintVertical_bias="0.2"
+            app:srcCompat="@drawable/ic_baseline_videocam_24" />
+
+        <TextView
+            android:id="@+id/chat_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="대화"
+            android:textColor="#8A8686"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/chat_btn"
+            app:layout_constraintStart_toStartOf="@+id/chat_btn"
+            app:layout_constraintTop_toBottomOf="@+id/chat_btn"
+            app:layout_constraintVertical_bias="0" />
+
+        <TextView
+            android:id="@+id/call_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="음성통화"
+            android:textColor="#8A8686"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/call_btn"
+            app:layout_constraintStart_toStartOf="@+id/call_btn"
+            app:layout_constraintTop_toBottomOf="@+id/call_btn"
+            app:layout_constraintVertical_bias="0" />
+
+        <TextView
+            android:id="@+id/video_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="영상통화"
+            android:textColor="#8A8686"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/video_btn"
+            app:layout_constraintStart_toStartOf="@+id/video_btn"
+            app:layout_constraintTop_toBottomOf="@+id/video_btn"
+            app:layout_constraintVertical_bias="0" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
