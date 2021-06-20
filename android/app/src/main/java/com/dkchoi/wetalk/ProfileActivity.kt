@@ -1,5 +1,6 @@
 package com.dkchoi.wetalk
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
@@ -43,6 +44,12 @@ class ProfileActivity : AppCompatActivity() {
 
 
         binding.closeBtn.setOnClickListener { //닫기 버튼을 눌렀을때 activity 종료
+            finish()
+        }
+
+        binding.chatBtn.setOnClickListener {
+            var intent = Intent(this, ChatActivity::class.java)
+            startActivity(intent)
             finish()
         }
     }
