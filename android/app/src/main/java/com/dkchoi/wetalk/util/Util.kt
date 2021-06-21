@@ -2,7 +2,6 @@ package com.dkchoi.wetalk.util
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.app.Service
 import android.content.ContentResolver
 import android.content.Context
 import android.content.SharedPreferences
@@ -11,18 +10,15 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
 import android.telephony.TelephonyManager
-import android.text.Editable
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.room.Room
-import com.dkchoi.wetalk.RegisterActivity.Companion.toEditable
-import com.dkchoi.wetalk.SplashActivity
 import com.dkchoi.wetalk.data.PhoneBook
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
-import com.dkchoi.wetalk.room.UserDatabase
+import com.dkchoi.wetalk.room.AppDatabase
 
 class Util {
     companion object {
@@ -151,7 +147,7 @@ class Util {
             // 서버에서 받아온 유저 정보를 데이터베이스에 저장하기 위해 db객체 생성
             val db = Room.databaseBuilder(
                 application,
-                UserDatabase::class.java, "user-database"
+                AppDatabase::class.java, "user-database"
             )
                 .allowMainThreadQueries()
                 .build()

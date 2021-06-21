@@ -8,12 +8,11 @@ import com.dkchoi.wetalk.data.PhoneBook
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
-import com.dkchoi.wetalk.room.UserDatabase
+import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
-import kotlinx.coroutines.launch
 
 class HomeFragmentViewModel(application: Application) : AndroidViewModel(application) {
-    val db = Room.databaseBuilder(application, UserDatabase::class.java, "user-database").build()
+    val db = Room.databaseBuilder(application, AppDatabase::class.java, "user-database").build()
 
     private val friendList: MutableList<String> by lazy {
         mutableListOf()

@@ -1,40 +1,28 @@
 package com.dkchoi.wetalk.fragment
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.signature.ObjectKey
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.adapter.FriendListAdapter
-import com.dkchoi.wetalk.data.PhoneBook
 import com.dkchoi.wetalk.databinding.FragmentHomeBinding
-import com.dkchoi.wetalk.room.UserDatabase
 import com.dkchoi.wetalk.util.RecyclerViewDecoration
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.viewmodel.HomeFragmentViewModel
 import kotlinx.coroutines.*
-import java.security.Signature
 
 class HomeFragment : Fragment() {
     private val TAG: String = javaClass.simpleName

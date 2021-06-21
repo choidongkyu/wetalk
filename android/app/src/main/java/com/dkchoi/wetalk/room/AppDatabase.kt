@@ -5,7 +5,8 @@ import androidx.room.RoomDatabase
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.User
 
-@Database(entities = [ChatRoom::class], version = 1)
-abstract class ChatRoomDatabase: RoomDatabase() {
+@Database(entities = [User::class, ChatRoom::class], version = 1)
+abstract class AppDatabase : RoomDatabase(){
+    abstract fun userDao(): UserDao
     abstract fun chatRoomDao(): ChatRoomDao
 }

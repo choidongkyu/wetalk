@@ -21,11 +21,11 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/room_name"
+            android:id="@+id/room_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:text="채혜인"
+            android:text=""
             android:textColor="@color/black"
             android:textSize="18sp" />
 
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:ellipsize="end"
-            android:text="마지막 메시지"
+            android:text=""
             android:textColor="#8A8686"
             android:textSize="13sp" />
     </LinearLayout>
@@ -47,7 +47,7 @@
 
     <TextView
         android:id="@+id/last_time"
-        android:text="01:59 PM"
+        android:text=""
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center"
