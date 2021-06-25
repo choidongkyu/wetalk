@@ -1,6 +1,7 @@
 package com.dkchoi.wetalk.fragment
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -37,11 +38,15 @@ class ChatRoomFragment : Fragment() {
             layoutManager = LinearLayoutManager(activity)
         }
 
-        viewModel.getChatRooms().observe(viewLifecycleOwner, Observer {
-            chatRoomAdapter.updateItem(it)
-        })
-
         binding.recyclerView.addItemDecoration(RecyclerViewDecoration(40)) // 아이템간 간격 설정
         return view
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.getChatRooms().observe(viewLifecycleOwner, Observer {
+            val adapter = binding.recyclerView.adapter as ChatRoomAdapter
+            adapter.updateItem(it)
+        })
     }
 }

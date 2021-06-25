@@ -14,14 +14,35 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatItem
+import com.dkchoi.wetalk.data.MessageData
+import com.dkchoi.wetalk.data.MessageType
 import com.dkchoi.wetalk.data.ViewType
+import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.util.Util.Companion.gson
+import com.dkchoi.wetalk.util.Util.Companion.toDate
 
-class ChatAdapter(private val items: MutableList<ChatItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private lateinit var context: Context
+class ChatAdapter(private val messageDatas: String, private var context: Context) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private var items: MutableList<ChatItem> = mutableListOf()
+
+    init {
+        if (messageDatas != "") { //기존 대화가 존재한다면
+            val messageList = messageDatas.substring(0, messageDatas.length -1) //맨 끝에 '|' 제거
+            addMessageDataList(messageList)
+        }
+    }
+
+    private fun addMessageDataList(messageDatas: String) {
+        val messages = messageDatas.split("|")
+        for (data in messages) {
+            val messageData = gson.fromJson(data, MessageData::class.java)
+            addMessageData(messageData)
+        }
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View
-        val context = parent.context
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         return when (viewType) {
@@ -149,5 +170,51 @@ class ChatAdapter(private val items: MutableList<ChatItem>) : RecyclerView.Adapt
     fun addItem(item: ChatItem) {
         items.add(item)
         notifyDataSetChanged()
+    }
+
+    private fun addMessageData(messageData: MessageData) {
+        if (Util.getMyName(context) == messageData.name) { //자기 자신이 보낸 메시지라면
+            if (messageData.type == MessageType.TEXT_MESSAGE) {
+                items.add(
+                    ChatItem(
+                        messageData.name,
+                        messageData.content,
+                        messageData.sendTime.toDate(),
+                        ViewType.RIGHT_MESSAGE
+                    )
+                )
+
+            } else {
+                items.add(
+                    ChatItem(
+                        messageData.name,
+                        messageData.content,
+                        messageData.sendTime.toDate(),
+                        ViewType.RIGHT_MESSAGE
+                    )
+                )
+            }
+        } else { // 상대방이 보낸 메시지라면
+            if (messageData.type == MessageType.TEXT_MESSAGE) {
+                items.add(
+                    ChatItem(
+                        messageData.name,
+                        messageData.content,
+                        messageData.sendTime.toDate(),
+                        ViewType.LEFT_MESSAGE
+                    )
+                )
+
+            } else {
+                items.add(
+                    ChatItem(
+                        messageData.name,
+                        messageData.content,
+                        messageData.sendTime.toDate(),
+                        ViewType.LEFT_IMAGE
+                    )
+                )
+            }
+        }
     }
 }

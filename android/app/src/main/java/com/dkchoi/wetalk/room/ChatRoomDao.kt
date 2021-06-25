@@ -9,8 +9,11 @@ interface ChatRoomDao {
     @Query("SELECT * FROM ChatRoom")
     fun getAll(): LiveData<List<ChatRoom>> // 모든 방 리스트를 가져오는 쿼리
 
+    @Query("SELECT * FROM ChatRoom WHERE roomName = :id") //roomName 으로 하나의 룸만 가져오는 쿼리
+    fun getRoom(id: String): ChatRoom
+
     @Update
-    fun updateChatRoom(chatRoom: ChatRoom) // 채팅방 업데이트
+    suspend fun updateChatRoom(chatRoom: ChatRoom) // 채팅방 업데이트
 
     @Delete
     fun deleteChatRoom(chatRoom: ChatRoom) // 채팅방 삭제

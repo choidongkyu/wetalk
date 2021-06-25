@@ -16,7 +16,8 @@ import com.dkchoi.wetalk.util.Util
 
 class ProfileActivity : AppCompatActivity() {
     private val db: AppDatabase by lazy {
-        Room.databaseBuilder(this, AppDatabase::class.java, "chatRoom-database").allowMainThreadQueries().build()
+        Room.databaseBuilder(this, AppDatabase::class.java, "chatRoom-database")
+            .allowMainThreadQueries().build()
     }
 
     private lateinit var user: User
@@ -61,11 +62,15 @@ class ProfileActivity : AppCompatActivity() {
             var roomName = "${user.id},${Util.getPhoneNumber(this)}"
             val roomNameArray = roomName.split(",").sorted() // room name 통일위하여 sort
             roomName = "${roomNameArray[0]},${roomNameArray[1]}"
-            val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
+            var chatRoom = db.chatRoomDao().getRoom(roomName)
+            if(chatRoom == null) { //기존에 존재하는 room이 없을경우 room 생성
+                val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
 
-            val chatRoom = ChatRoom(roomName, user.name, null, imgPath, null)
-            db.chatRoomDao().insertChatRoom(chatRoom)
+                chatRoom = ChatRoom(roomName, user.name, "", imgPath, null)
+                db.chatRoomDao().insertChatRoom(chatRoom)
+            }
             val intent = Intent(this, ChatActivity::class.java)
+            intent.putExtra("chatRoom", chatRoom)
             startActivity(intent)
             finish()
         }

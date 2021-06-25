@@ -10,13 +10,18 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.signature.ObjectKey
+import com.dkchoi.wetalk.ChatActivity
 import com.dkchoi.wetalk.ProfileActivity
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
+import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.User
+import com.dkchoi.wetalk.util.Util.Companion.gson
+import com.dkchoi.wetalk.util.Util.Companion.toDate
+import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
+import com.google.gson.Gson
 
-class ChatRoomAdapter: RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
+class ChatRoomAdapter(): RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
     private lateinit var context: Context
     private var chatRoomList: List<ChatRoom> = listOf()
 
@@ -36,11 +41,15 @@ class ChatRoomAdapter: RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
             .into(holder.roomImage)
 
         holder.roomTitle.text = chatRoom.roomTitle
-        chatRoom.lastMessage.let {
-            holder.roomLastMessage.text = it
-        }
-        chatRoom.lastTime.let {
-            holder.roomLastTime.text = it
+
+        if(chatRoom.messageDatas != "") {
+            val message: String = chatRoom.messageDatas.substring(0, chatRoom.messageDatas.length -1) //맨 끝에 '|' 제거
+            val messages:List<String> = message.split("|") // room에 있는 메시지 "|" 기준 parsing
+
+            val lastDataMessage = gson.fromJson(messages[messages.size -1], MessageData::class.java) //데이터 마지막 메시지 값 구함
+
+            holder.roomLastMessage.text = lastDataMessage.content
+            holder.roomLastTime.text = lastDataMessage.sendTime.toDate()
         }
     }
 
@@ -58,5 +67,13 @@ class ChatRoomAdapter: RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
         val roomTitle: TextView = itemView.findViewById(R.id.room_title)
         val roomLastMessage: TextView = itemView.findViewById(R.id.last_message)
         val roomLastTime: TextView = itemView.findViewById(R.id.last_time)
+        init {
+            itemView.setOnClickListener {
+                val intent = Intent(context, ChatActivity::class.java)
+                val chatRoom: ChatRoom = chatRoomList[adapterPosition]
+                intent.putExtra("chatRoom", chatRoom)
+                context.startActivity(intent)
+            }
+        }
     }
 }

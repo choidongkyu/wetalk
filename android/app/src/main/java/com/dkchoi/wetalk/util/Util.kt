@@ -19,9 +19,15 @@ import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
+import com.google.gson.Gson
+import java.text.SimpleDateFormat
+import java.util.*
 
 class Util {
     companion object {
+
+        val gson = Gson()
+
         const val profileImgPath = "http://49.247.19.12/profile_image";
         fun setSession(id: String, context: Context) {
             val sharedPreferences: SharedPreferences =
@@ -226,6 +232,11 @@ class Util {
                 phoneNumber = phoneNumber.replaceFirst("0", "+82")
             }
             return phoneNumber
+        }
+
+        @SuppressLint("SimpleDateFormat")
+        fun Long.toDate(): String {
+            return SimpleDateFormat("hh:mm a").format(Date(this))
         }
     }
 }
