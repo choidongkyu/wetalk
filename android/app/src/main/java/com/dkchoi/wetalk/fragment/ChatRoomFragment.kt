@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,7 +19,7 @@ import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 
 class ChatRoomFragment : Fragment() {
     private lateinit var binding: FragmentChatRoomBinding
-    val viewModel: ChatRoomViewModel by viewModels()
+    val viewModel: ChatRoomViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,5 +49,10 @@ class ChatRoomFragment : Fragment() {
             val adapter = binding.recyclerView.adapter as ChatRoomAdapter
             adapter.updateItem(it)
         })
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("test11", "chatroom fragment destroy called")
     }
 }

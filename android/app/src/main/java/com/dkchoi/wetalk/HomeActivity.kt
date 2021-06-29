@@ -63,22 +63,6 @@ class HomeActivity : AppCompatActivity() {
                 //nothing
             }
         })
-
-        val server = ServiceGenerator.retrofit.create(BackendInterface::class.java)
-        lifecycleScope.launch {
-            var statusMsg: String? = null
-            val phone = Util.getSession(this@HomeActivity) // sharedPref에 저장되어 있는 핸드폰 번호 가져옴
-            statusMsg = server.getStatusMsg(phone!!) // 서버에 자신의 상태메시지가 있는지 확인
-            var name = server.getName(phone)
-
-
-            if (statusMsg == null || statusMsg.equals("")) { // 상태메시지가 없다면 아래와 같이 설정
-                statusMsg = "상태 메시지를 입력해주세요"
-            }
-
-            Util.setMyStatueMsg(statusMsg, this@HomeActivity) // 상태메시지 Pref에 저장
-            Util.setMyName(name, this@HomeActivity) // 프로필 이름 Pref에 저장
-        }
     }
 }
 
