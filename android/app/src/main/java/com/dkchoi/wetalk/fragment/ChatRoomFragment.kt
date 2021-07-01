@@ -1,5 +1,6 @@
 package com.dkchoi.wetalk.fragment
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -10,16 +11,23 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.adapter.ChatRoomAdapter
+import com.dkchoi.wetalk.data.ChatRoom
+import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.databinding.FragmentChatRoomBinding
 import com.dkchoi.wetalk.util.RecyclerViewDecoration
+import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.util.Util.Companion.getMyName
+import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
+import kotlinx.coroutines.launch
 
 class ChatRoomFragment : Fragment() {
     private lateinit var binding: FragmentChatRoomBinding
-    val viewModel: ChatRoomViewModel by activityViewModels()
+    private val viewModel: ChatRoomViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +36,10 @@ class ChatRoomFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
-        binding = DataBindingUtil.inflate(layoutInflater, R.layout.fragment_chat_room, container, false)
+        binding =
+            DataBindingUtil.inflate(layoutInflater, R.layout.fragment_chat_room, container, false)
         val view = binding.root
 
         val chatRoomAdapter = ChatRoomAdapter()

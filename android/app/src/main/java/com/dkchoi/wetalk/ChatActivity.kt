@@ -12,6 +12,7 @@ import com.dkchoi.wetalk.adapter.ChatAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
 import com.dkchoi.wetalk.room.AppDatabase
+import com.dkchoi.wetalk.util.ChatClientReceiveThread
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
@@ -20,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
+import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
@@ -66,17 +68,31 @@ class ChatActivity : AppCompatActivity() {
             Util.getMyName(this)!!,
             request,
             System.currentTimeMillis(),
-            chatRoom.roomName
+            chatRoom.roomName,
+            chatRoom.roomTitle
         )
         val jsonMessage = gson.toJson(messageData) // message data를 json형태로 변환
 
-        chatRoom.messageDatas = chatRoom.messageDatas + jsonMessage + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+
+        chatRoom.messageDatas =
+            chatRoom.messageDatas + jsonMessage + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
 
         lifecycleScope.launch(Dispatchers.Default) {
-            db.chatRoomDao().updateChatRoom(chatRoom) //db update
+            db.chatRoomDao().updateChatRoom(chatRoom) //로컬db에 메시지 저장
         }
 
         val message =
-            "message::${jsonMessage}\r\n" // \r\n을 메시지 끝에 붙여야 java에서 메시지의 끝임을 알 수 있음
+            "message::${chatRoom.roomName}::${jsonMessage}\r\n" // \r\n을 메시지 끝에 붙여야 java에서 메시지의 끝임을 알 수 있음
+
+        //socket으로 메시지 send
+        Thread(Runnable {
+            val socket =
+                Socket(ChatClientReceiveThread.SERVER_IP, ChatClientReceiveThread.SERVER_PORT)
+            val pw = PrintWriter(
+                OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
+                true
+            )
+            pw.println(message)
+        }).start()
     }
 }

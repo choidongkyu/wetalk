@@ -107,6 +107,10 @@ class Util {
             editor.apply()
         }
 
+        fun getMyUser(context: Context): User {
+            return User(getPhoneNumber(context), getMyImg(context), getMyStatusMsg(context), getMyName(context)!!)
+        }
+
         fun setMyImg(msg: String, context: Context) {
             val sharedPreferences: SharedPreferences =
                 context.getSharedPreferences(

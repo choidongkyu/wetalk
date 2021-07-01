@@ -5,11 +5,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import retrofit2.Call

@@ -12,7 +12,12 @@ import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.databinding.ActivityProfileBinding
 import com.dkchoi.wetalk.room.AppDatabase
+import com.dkchoi.wetalk.util.ChatClientReceiveThread
 import com.dkchoi.wetalk.util.Util
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import java.net.Socket
+import java.nio.charset.StandardCharsets
 
 class ProfileActivity : AppCompatActivity() {
     private val db: AppDatabase by lazy {
@@ -58,21 +63,37 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.chatBtn.setOnClickListener {
-            //roomName ex - +821093230128,+821026595819
-            var roomName = "${user.id},${Util.getPhoneNumber(this)}"
-            val roomNameArray = roomName.split(",").sorted() // room name 통일위하여 sort
-            roomName = "${roomNameArray[0]},${roomNameArray[1]}"
-            var chatRoom = db.chatRoomDao().getRoom(roomName)
-            if(chatRoom == null) { //기존에 존재하는 room이 없을경우 room 생성
-                val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
-
-                chatRoom = ChatRoom(roomName, user.name, "", imgPath, null)
-                db.chatRoomDao().insertChatRoom(chatRoom)
-            }
+            val chatRoom = createRoom()
             val intent = Intent(this, ChatActivity::class.java)
             intent.putExtra("chatRoom", chatRoom)
             startActivity(intent)
             finish()
         }
+    }
+
+    private fun createRoom(): ChatRoom {
+        var roomName = "${user.id},${Util.getPhoneNumber(this)}" //roomName ex - +821093230128,+821026595819
+        val roomNameArray = roomName.split(",").sorted() // room name 통일위하여 sort
+        roomName = "${roomNameArray[0]},${roomNameArray[1]}"
+        var chatRoom = db.chatRoomDao().getRoom(roomName)
+
+        if (chatRoom == null) { //기존에 존재하는 room이 없을경우 room 생성
+            val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
+
+            chatRoom = ChatRoom(roomName, "${user.name},${Util.getMyName(this)}", "", imgPath, null)
+            db.chatRoomDao().insertChatRoom(chatRoom)
+        }
+
+        //서버에 room 생성 요청
+        Thread(Runnable {
+            val socket =
+                Socket(ChatClientReceiveThread.SERVER_IP, ChatClientReceiveThread.SERVER_PORT)
+            val pw = PrintWriter(
+                OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
+                true
+            )
+            pw.println("createRoom::${roomName}")
+        }).start()
+        return chatRoom
     }
 }

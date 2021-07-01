@@ -5,5 +5,6 @@ data class MessageData(
     val name: String,
     val content: String,
     val sendTime: Long,
-    var roomName: String
+    val roomName: String,
+    val roomTitle: String
 )

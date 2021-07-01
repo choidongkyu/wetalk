@@ -16,6 +16,7 @@ import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.User
+import com.dkchoi.wetalk.util.Util.Companion.getMyName
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
@@ -40,7 +41,19 @@ class ChatRoomAdapter(): RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
             .apply(RequestOptions.circleCropTransform())
             .into(holder.roomImage)
 
-        holder.roomTitle.text = chatRoom.roomTitle
+        //방이름은 자신을 제외한 상대방의 이름으로 구성
+        val names = chatRoom.roomTitle.split(",") //방 제목은 최동규,채혜인,에뮬레이터 식으로 구성되므로 , 기준으로 파싱
+        var roomTitle = ""
+        for(name in names) {
+            if(name == getMyName(context)) { //자신의 이름일 경우 건너 뜀
+                continue
+            }
+            roomTitle += "$name,"
+        }
+
+        roomTitle = roomTitle.substring(0, roomTitle.length -1)//마지막 , 제거
+
+        holder.roomTitle.text = roomTitle
 
         if(chatRoom.messageDatas != "") {
             val message: String = chatRoom.messageDatas.substring(0, chatRoom.messageDatas.length -1) //맨 끝에 '|' 제거
