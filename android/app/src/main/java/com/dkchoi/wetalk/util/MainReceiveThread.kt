@@ -10,16 +10,29 @@ import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 
-class ChatClientReceiveThread(private val user: User, private val listener: ReceiveListener, private val activity: Activity) : Thread() {
+class MainReceiveThread private constructor() : Thread() {
 
-    private var running = true;
+    private var running = true
     private lateinit var pw: PrintWriter
     private lateinit var socket: Socket
+    private var listener: ReceiveListener? = null
+
+
     companion object {
+        private var instance: MainReceiveThread? = null
+        private lateinit var user: User
+
+        fun getInstance(_user: User): MainReceiveThread {
+            return instance ?: synchronized(this) {
+                instance ?: MainReceiveThread().also {
+                    instance = it
+                    user = _user
+                }
+            }
+        }
+
         const val SERVER_IP = "49.247.19.12"
-        //const val SERVER_IP = "192.168.0.9"
         const val SERVER_PORT = 5002
-        const val JOIN_KEY = "cfc3cf70-c9fc-11eb-9345-0800200c9a66"
     }
 
     interface ReceiveListener {
@@ -36,17 +49,23 @@ class ChatClientReceiveThread(private val user: User, private val listener: Rece
 
         val br = BufferedReader(InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))
         while (running) {
-            val msg:String? = br.readLine()
-            msg?.let { listener.onReceive(it) }
+            val msg: String? = br.readLine()
+            msg?.let { listener?.onReceive(it) }
         }
     }
 
     fun stopThread() {
         Log.d("test11", "stopThread called")
-        running = false;
+        running = false
         Thread(Runnable {
             val request = "quit\r\n"
             pw.println(request)
         }).start()
+        listener = null
+        instance = null
+    }
+
+    fun setListener(callback: ReceiveListener) {
+        listener = callback
     }
 }

@@ -13,10 +13,7 @@ import com.dkchoi.wetalk.databinding.ActivityHomeBinding
 import com.dkchoi.wetalk.fragment.ChatRoomFragment
 import com.dkchoi.wetalk.fragment.HomeFragment
 import com.dkchoi.wetalk.fragment.ProfileFragment
-import com.dkchoi.wetalk.retrofit.BackendInterface
-import com.dkchoi.wetalk.retrofit.ServiceGenerator
-import com.dkchoi.wetalk.util.ChatClientReceiveThread
-import com.dkchoi.wetalk.util.ChatClientReceiveThread.Companion.JOIN_KEY
+import com.dkchoi.wetalk.util.MainReceiveThread
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
@@ -24,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-class HomeActivity : AppCompatActivity(), ChatClientReceiveThread.ReceiveListener {
+class HomeActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
     private val HOME_CONTAINER = 0
     private val CHAT_CONTAINER = 1
     private val PROFILE_CONTAINER = 2
@@ -34,7 +31,7 @@ class HomeActivity : AppCompatActivity(), ChatClientReceiveThread.ReceiveListene
     private lateinit var chatRoomFragment: ChatRoomFragment
     private lateinit var profileFragment: ProfileFragment
 
-    private lateinit var chatClientReceiveThread: ChatClientReceiveThread
+    private lateinit var mainReceiveThread: MainReceiveThread
 
     private lateinit var user: User
 
@@ -79,17 +76,20 @@ class HomeActivity : AppCompatActivity(), ChatClientReceiveThread.ReceiveListene
         })
 
         user = Util.getMyUser(this)
-        chatClientReceiveThread = ChatClientReceiveThread(user, this, this) // 소켓 통신위한 쓰레드 생성
-        chatClientReceiveThread.start() // 소켓 연결
+        mainReceiveThread = MainReceiveThread.getInstance(user) // 소켓 통신위한 쓰레드 생성
+        mainReceiveThread.setListener(this)
+        mainReceiveThread.start() // 소켓 연결
     }
 
     override fun onResume() {
         super.onResume()
+        Log.d("test11","onResume called in home")
+        mainReceiveThread.setListener(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        chatClientReceiveThread.stopThread()
+        mainReceiveThread.stopThread()
     }
 
     //소켓 통신으로 오는 콜백

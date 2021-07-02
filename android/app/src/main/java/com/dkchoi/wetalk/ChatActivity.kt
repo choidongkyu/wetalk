@@ -1,9 +1,7 @@
 package com.dkchoi.wetalk
 
-import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,21 +10,21 @@ import com.dkchoi.wetalk.adapter.ChatAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
 import com.dkchoi.wetalk.room.AppDatabase
-import com.dkchoi.wetalk.util.ChatClientReceiveThread
+import com.dkchoi.wetalk.util.ChatActivityReceiveThread.Companion.JOIN_KEY
+import com.dkchoi.wetalk.util.MainReceiveThread
 import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.util.Util.Companion.getMyName
+import com.dkchoi.wetalk.util.Util.Companion.getMyUser
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
-import java.text.SimpleDateFormat
-import java.util.*
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
     private lateinit var binding: ActivityChatBinding
     private lateinit var adapter: ChatAdapter
     private lateinit var chatRoom: ChatRoom
@@ -60,6 +58,17 @@ class ChatActivity : AppCompatActivity() {
             binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
             binding.contentEdit.setText("")
         }
+
+        val user = getMyUser(this)
+        MainReceiveThread.getInstance(user).setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
+    }
+
+    override fun onResume() {
+        super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
     }
 
     private fun sendMessage(request: String) {
@@ -87,12 +96,59 @@ class ChatActivity : AppCompatActivity() {
         //socket으로 메시지 send
         Thread(Runnable {
             val socket =
-                Socket(ChatClientReceiveThread.SERVER_IP, ChatClientReceiveThread.SERVER_PORT)
+                Socket(MainReceiveThread.SERVER_IP, MainReceiveThread.SERVER_PORT)
             val pw = PrintWriter(
                 OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
                 true
             )
             pw.println(message)
         }).start()
+    }
+
+    override fun onReceive(msg: String) {
+        runOnUiThread {
+            var message = msg.replace("\r\n", "")
+            if (message.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
+                message = message.replace(JOIN_KEY, "") // 조인키 삭제
+                adapter.addItem(
+                    ChatItem(
+                        "",
+                        message,
+                        "",
+                        ViewType.CENTER_MESSAGE
+                    )
+                )
+                binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
+            } else {
+                val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+                if (messageData.name.equals(getMyName(this))) return@runOnUiThread // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
+                addChat(messageData)
+            }
+        }
+    }
+
+    //상대방이 메시지 보낼 경우
+    private fun addChat(messageData: MessageData) {
+        if (messageData.type == MessageType.TEXT_MESSAGE) {
+            adapter.addItem(
+                ChatItem(
+                    messageData.name,
+                    messageData.content,
+                    messageData.sendTime.toDate(),
+                    ViewType.LEFT_MESSAGE
+                )
+            )
+            binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
+        } else {
+            adapter.addItem(
+                ChatItem(
+                    messageData.name,
+                    messageData.content,
+                    messageData.sendTime.toDate(),
+                    ViewType.LEFT_IMAGE
+                )
+            )
+            binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
+        }
     }
 }

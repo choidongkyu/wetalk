@@ -78,6 +78,7 @@ class ProfileFragment : Fragment() {
                 val name = Util.getPhoneNumber(requireContext())
                 processTheImage(bitmap!!, name) //이미지 저장
             }
+
         }
 
     private val permissions = arrayOf<String>(
@@ -152,6 +153,7 @@ class ProfileFragment : Fragment() {
     }
 
     private suspend fun saveBitmapToJpeg(bitmap: Bitmap, name: String) {
+        Log.d("test11", "saveBitmaptoJpeg called")
 
         //내부 저장소 캐쉬 경로 받아옴
         val storage: File? = activity?.cacheDir
@@ -171,6 +173,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun processTheImage(bitmap: Bitmap, name: String) {
+        Log.d("test11", "processTheImage called")
         lifecycleScope.launch {
             binding.progressbar.visibility = View.VISIBLE
             saveBitmapToJpeg(bitmap, name)
