@@ -10,8 +10,8 @@ import com.dkchoi.wetalk.adapter.ChatAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
 import com.dkchoi.wetalk.room.AppDatabase
-import com.dkchoi.wetalk.util.ChatActivityReceiveThread.Companion.JOIN_KEY
 import com.dkchoi.wetalk.util.MainReceiveThread
+import com.dkchoi.wetalk.util.MainReceiveThread.Companion.JOIN_KEY
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
 import com.dkchoi.wetalk.util.Util.Companion.getMyUser

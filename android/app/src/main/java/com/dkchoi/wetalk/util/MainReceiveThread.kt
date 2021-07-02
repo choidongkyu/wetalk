@@ -33,6 +33,7 @@ class MainReceiveThread private constructor() : Thread() {
 
         const val SERVER_IP = "49.247.19.12"
         const val SERVER_PORT = 5002
+        const val JOIN_KEY = "cfc3cf70-c9fc-11eb-9345-0800200c9a66"
     }
 
     interface ReceiveListener {
