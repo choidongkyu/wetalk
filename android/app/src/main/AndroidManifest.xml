@@ -22,7 +22,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeTalk"
         android:usesCleartextTraffic="true">
-        <activity android:name=".ChatActivity"></activity>
+        <service
+            android:name=".service.SocketReceiveService"
+            android:enabled="true"
+            android:exported="true">
+        </service>
+
+        <activity android:name=".ChatActivity" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".ProfileMsgEditActivity" />
         <activity
@@ -34,7 +40,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ConnectionTestActivity" />
         <activity android:name=".HomeActivity" />
         <activity android:name=".AuthActivity" />
         <activity android:name=".CertificationActivity" />

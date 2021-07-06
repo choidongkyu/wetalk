@@ -1,18 +1,18 @@
 package com.dkchoi.wetalk
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.dkchoi.wetalk.util.Util
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 
 class SplashActivity : AppCompatActivity() {
 

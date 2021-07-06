@@ -1,6 +1,10 @@
 package com.dkchoi.wetalk
 
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +17,7 @@ import com.dkchoi.wetalk.databinding.ActivityHomeBinding
 import com.dkchoi.wetalk.fragment.ChatRoomFragment
 import com.dkchoi.wetalk.fragment.HomeFragment
 import com.dkchoi.wetalk.fragment.ProfileFragment
-import com.dkchoi.wetalk.util.MainReceiveThread
+import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
@@ -21,7 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-class HomeActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
+class HomeActivity : AppCompatActivity() {
     private val HOME_CONTAINER = 0
     private val CHAT_CONTAINER = 1
     private val PROFILE_CONTAINER = 2
@@ -31,14 +35,18 @@ class HomeActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
     private lateinit var chatRoomFragment: ChatRoomFragment
     private lateinit var profileFragment: ProfileFragment
 
-    private lateinit var mainReceiveThread: MainReceiveThread
-
-    private lateinit var user: User
-
     private val chatRoomViewModel: ChatRoomViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                BatteryDialog().show(supportFragmentManager, "dialog")
+            }
+        }
+
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -75,25 +83,24 @@ class HomeActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
             }
         })
 
-        user = Util.getMyUser(this)
-        mainReceiveThread = MainReceiveThread.getInstance(user) // 소켓 통신위한 쓰레드 생성
-        mainReceiveThread.setListener(this)
-        mainReceiveThread.start() // 소켓 연결
+        startService(Intent(applicationContext, SocketReceiveService::class.java)) // 소켓 서비스 시작
+
+//        user = Util.getMyUser(this)
+//        mainReceiveThread = MainReceiveThread.getInstance(user) // 소켓 통신위한 쓰레드 생성
+//        mainReceiveThread.setListener(this)
+//        mainReceiveThread.start() // 소켓 연결
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d("test11","onResume called in home")
-        mainReceiveThread.setListener(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mainReceiveThread.stopThread()
     }
 
     //소켓 통신으로 오는 콜백
-    override fun onReceive(msg: String) {
+    fun onReceive(msg: String) {
         receiveMessage(msg)
     }
 

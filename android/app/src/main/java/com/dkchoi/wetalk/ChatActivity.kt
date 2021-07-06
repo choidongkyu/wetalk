@@ -10,8 +10,9 @@ import com.dkchoi.wetalk.adapter.ChatAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
 import com.dkchoi.wetalk.room.AppDatabase
-import com.dkchoi.wetalk.util.MainReceiveThread
-import com.dkchoi.wetalk.util.MainReceiveThread.Companion.JOIN_KEY
+import com.dkchoi.wetalk.service.SocketReceiveService.Companion.JOIN_KEY
+import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_IP
+import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_PORT
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
 import com.dkchoi.wetalk.util.Util.Companion.getMyUser
@@ -24,7 +25,7 @@ import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 
-class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
+class ChatActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChatBinding
     private lateinit var adapter: ChatAdapter
     private lateinit var chatRoom: ChatRoom
@@ -59,9 +60,9 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
             binding.contentEdit.setText("")
         }
 
-        val user = getMyUser(this)
-        MainReceiveThread.getInstance(user)
-            .setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
+//        val user = getMyUser(this)
+//        MainReceiveThread.getInstance(user)
+//            .setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
     }
 
     override fun onResume() {
@@ -97,7 +98,7 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
         //socket으로 메시지 send
         Thread(Runnable {
             val socket =
-                Socket(MainReceiveThread.SERVER_IP, MainReceiveThread.SERVER_PORT)
+                Socket(SERVER_IP, SERVER_PORT)
             val pw = PrintWriter(
                 OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
                 true
@@ -106,7 +107,7 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
         }).start()
     }
 
-    override fun onReceive(msg: String) {
+    fun onReceive(msg: String) {
         runOnUiThread {
             var message = msg.replace("\r\n", "")
             if (message.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
@@ -152,7 +153,6 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
     }
 
     private fun saveMsgToLocalDB(message: String) {
-        //서스펜드 함수이므로 코루틴 내에서 실행
         val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
         if (messageData.name.equals(getMyName(this))) return // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
         lifecycleScope.launch(Dispatchers.Default) {

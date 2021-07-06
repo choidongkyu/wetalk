@@ -13,7 +13,7 @@ interface ChatRoomDao {
     fun getRoom(id: String): ChatRoom
 
     @Update
-    suspend fun updateChatRoom(chatRoom: ChatRoom) // 채팅방 업데이트
+    fun updateChatRoom(chatRoom: ChatRoom) // 채팅방 업데이트
 
     @Delete
     fun deleteChatRoom(chatRoom: ChatRoom) // 채팅방 삭제

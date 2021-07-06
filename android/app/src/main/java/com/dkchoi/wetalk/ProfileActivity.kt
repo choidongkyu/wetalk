@@ -12,7 +12,8 @@ import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.databinding.ActivityProfileBinding
 import com.dkchoi.wetalk.room.AppDatabase
-import com.dkchoi.wetalk.util.MainReceiveThread
+import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_IP
+import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_PORT
 import com.dkchoi.wetalk.util.Util
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
@@ -87,7 +88,7 @@ class ProfileActivity : AppCompatActivity() {
         //서버에 room 생성 요청
         Thread(Runnable {
             val socket =
-                Socket(MainReceiveThread.SERVER_IP, MainReceiveThread.SERVER_PORT)
+                Socket(SERVER_IP, SERVER_PORT)
             val pw = PrintWriter(
                 OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
                 true
