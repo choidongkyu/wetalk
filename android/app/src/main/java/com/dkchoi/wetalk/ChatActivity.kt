@@ -60,7 +60,8 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
         }
 
         val user = getMyUser(this)
-        MainReceiveThread.getInstance(user).setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
+        MainReceiveThread.getInstance(user)
+            .setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
     }
 
     override fun onResume() {
@@ -120,9 +121,7 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
                 )
                 binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
             } else {
-                val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
-                if (messageData.name.equals(getMyName(this))) return@runOnUiThread // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
-                addChat(messageData)
+                saveMsgToLocalDB(message)
             }
         }
     }
@@ -150,5 +149,48 @@ class ChatActivity : AppCompatActivity(), MainReceiveThread.ReceiveListener {
             )
             binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
         }
+    }
+
+    private fun saveMsgToLocalDB(message: String) {
+        //서스펜드 함수이므로 코루틴 내에서 실행
+        val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+        if (messageData.name.equals(getMyName(this))) return // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
+        lifecycleScope.launch(Dispatchers.Default) {
+            if (db.chatRoomDao()
+                    .getRoom(messageData.roomName) == null
+            ) { // 로컬 db에 존재하는 방이 없다면
+                var userId = ""
+                val users = messageData.roomName.split(",") //room name에 포함된 userid 파싱
+                for (user in users) {
+                    if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
+                        userId = user
+                        break
+                    }
+                }
+                val imgPath = "${Util.profileImgPath}/${userId}.jpg"
+                val chatRoom =
+                    ChatRoom(
+                        messageData.roomName,
+                        messageData.roomTitle,
+                        "$message|",
+                        imgPath,
+                        null
+                    ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
+
+
+                db.chatRoomDao().insertChatRoom(chatRoom)
+            } else { //기존에 방이 존재한다면
+                val chatRoom = db.chatRoomDao().getRoom(messageData.roomName)
+                //chatroom에 메시지 추가
+                chatRoom.messageDatas =
+                    chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+
+                db.chatRoomDao().updateChatRoom(chatRoom)
+            }
+        }
+        if(messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
+            addChat(messageData) // 리사이클러뷰에 추가
+        }
+
     }
 }
