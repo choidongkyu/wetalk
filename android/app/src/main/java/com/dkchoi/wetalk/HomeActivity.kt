@@ -1,18 +1,19 @@
 package com.dkchoi.wetalk
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.os.PowerManager
-import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
-import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.databinding.ActivityHomeBinding
 import com.dkchoi.wetalk.fragment.ChatRoomFragment
 import com.dkchoi.wetalk.fragment.HomeFragment
@@ -25,7 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener {
     private val HOME_CONTAINER = 0
     private val CHAT_CONTAINER = 1
     private val PROFILE_CONTAINER = 2
@@ -36,6 +37,23 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var profileFragment: ProfileFragment
 
     private val chatRoomViewModel: ChatRoomViewModel by viewModels()
+
+    companion object {
+        var service: SocketReceiveService? = null
+    }
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
+            val binder = p1 as SocketReceiveService.LocalBinder
+            service = binder.getService()
+            service?.registerListener(this@HomeActivity)
+        }
+
+        override fun onServiceDisconnected(p0: ComponentName?) {
+            service = null
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +102,7 @@ class HomeActivity : AppCompatActivity() {
         })
 
         startService(Intent(applicationContext, SocketReceiveService::class.java)) // 소켓 서비스 시작
+        bindService(Intent(this, SocketReceiveService::class.java), connection, BIND_AUTO_CREATE)
 
 //        user = Util.getMyUser(this)
 //        mainReceiveThread = MainReceiveThread.getInstance(user) // 소켓 통신위한 쓰레드 생성
@@ -93,6 +112,13 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        service?.registerListener(this@HomeActivity)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        service?.registerListener(null)
+
     }
 
     override fun onDestroy() {
@@ -100,7 +126,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     //소켓 통신으로 오는 콜백
-    fun onReceive(msg: String) {
+    override fun onReceive(msg: String) {
         receiveMessage(msg)
     }
 
@@ -124,7 +150,13 @@ class HomeActivity : AppCompatActivity() {
                 }
                 val imgPath = "${Util.profileImgPath}/${userId}.jpg"
                 val chatRoom =
-                    ChatRoom(messageData.roomName, messageData.roomTitle, "$message|", imgPath, null) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
+                    ChatRoom(
+                        messageData.roomName,
+                        messageData.roomTitle,
+                        "$message|",
+                        imgPath,
+                        null
+                    ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
 
                 chatRoomViewModel.insertRoom(chatRoom)
@@ -137,6 +169,9 @@ class HomeActivity : AppCompatActivity() {
                 chatRoomViewModel.updateRoom(chatRoom)
             }
         }
+    }
+    private fun showNotification() {
+        
     }
 }
 

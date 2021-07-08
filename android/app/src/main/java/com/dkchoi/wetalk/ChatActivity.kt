@@ -10,12 +10,12 @@ import com.dkchoi.wetalk.adapter.ChatAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
 import com.dkchoi.wetalk.room.AppDatabase
+import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.JOIN_KEY
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_IP
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_PORT
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
-import com.dkchoi.wetalk.util.Util.Companion.getMyUser
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,7 @@ import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener {
     private lateinit var binding: ActivityChatBinding
     private lateinit var adapter: ChatAdapter
     private lateinit var chatRoom: ChatRoom
@@ -60,6 +60,8 @@ class ChatActivity : AppCompatActivity() {
             binding.contentEdit.setText("")
         }
 
+        HomeActivity.service?.registerListener(this@ChatActivity)
+
 //        val user = getMyUser(this)
 //        MainReceiveThread.getInstance(user)
 //            .setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
@@ -71,6 +73,7 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        HomeActivity.service?.registerListener(null)
     }
 
     private fun sendMessage(request: String) {
@@ -107,7 +110,7 @@ class ChatActivity : AppCompatActivity() {
         }).start()
     }
 
-    fun onReceive(msg: String) {
+    override fun onReceive(msg: String) {
         runOnUiThread {
             var message = msg.replace("\r\n", "")
             if (message.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지

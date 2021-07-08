@@ -4,16 +4,12 @@ import android.app.Service
 import android.content.Intent
 import android.os.*
 import android.util.Log
-import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -23,14 +19,20 @@ import java.nio.charset.StandardCharsets
 
 class SocketReceiveService : Service() {
 
+    private val binder = LocalBinder()
+
     private lateinit var user: User
     private var receiveThread: MainReceiveThread? = null
-    private var serviceLooper: Looper? = null
+    private var listener: IReceiveListener? = null
     private var serviceHandler: Handler? = null
 
     private val db: AppDatabase by lazy {
         Room.databaseBuilder(this, AppDatabase::class.java, "chatRoom-database")
             .build()
+    }
+
+    interface IReceiveListener {
+        fun onReceive(msg: String)
     }
 
     companion object {
@@ -56,13 +58,20 @@ class SocketReceiveService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
-        // We don't provide binding, so return null
-        return null
+        return binder
     }
 
     override fun onDestroy() {
         Log.d("test11", "service onDestroy called ")
         receiveThread?.stopThread()
+    }
+
+    fun registerListener(cb: IReceiveListener?) {
+        listener = cb
+    }
+
+    inner class LocalBinder: Binder() {
+        fun getService(): SocketReceiveService = this@SocketReceiveService
     }
 
     inner class MainReceiveThread() : Thread() {
@@ -86,7 +95,12 @@ class SocketReceiveService : Service() {
             while (running) {
                 val msg: String? = br.readLine()
                 msg?.let {
-                    saveMsgToLocalDB(it)
+                    if (listener != null) {
+                        listener!!.onReceive(it) //listener이 null이 아닌경우 app이 현재 화면에 띄워진 상태이므로 콜백 불러줌
+                    } else {
+                        saveMsgToLocalDB(it) // 앱이 백그라운드에 있으므로 단순 db저장
+                    }
+
                 }
             }
         }
