@@ -1,5 +1,8 @@
 package com.dkchoi.wetalk
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -10,6 +13,8 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.dkchoi.wetalk.data.ChatRoom
@@ -169,9 +174,7 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                 chatRoomViewModel.updateRoom(chatRoom)
             }
         }
-    }
-    private fun showNotification() {
-        
+        service?.showNotification(messageData) // 노티 띄워줌
     }
 }
 

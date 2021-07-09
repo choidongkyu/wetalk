@@ -1,21 +1,31 @@
 package com.dkchoi.wetalk.service
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.*
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.room.Room
+import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
+import kotlinx.coroutines.*
+import java.io.*
+import java.lang.Runnable
 import java.net.Socket
+import java.net.URL
 import java.nio.charset.StandardCharsets
+import kotlin.concurrent.thread
+
 
 class SocketReceiveService : Service() {
 
@@ -49,6 +59,7 @@ class SocketReceiveService : Service() {
             Log.d("test11", "receivethread == null and make thread")
             receiveThread = MainReceiveThread()
         }
+        createNotificationChannel()
         receiveThread!!.start()
     }
 
@@ -70,7 +81,7 @@ class SocketReceiveService : Service() {
         listener = cb
     }
 
-    inner class LocalBinder: Binder() {
+    inner class LocalBinder : Binder() {
         fun getService(): SocketReceiveService = this@SocketReceiveService
     }
 
@@ -109,6 +120,10 @@ class SocketReceiveService : Service() {
             Log.d("test11", "stopThread called")
             running = false
             Thread(Runnable {
+                val pw = PrintWriter(
+                    OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
+                    true
+                )
                 val request = "quit\r\n"
                 pw.println(request)
             }).start()
@@ -150,6 +165,92 @@ class SocketReceiveService : Service() {
 
             db.chatRoomDao().updateChatRoom(chatRoom)
         }
+        showNotification(messageData)
+    }
+
+    private fun createNotificationChannel() {
+        val channelId = "$packageName-${getString(R.string.app_name)}"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = getString(R.string.app_name)
+            val descriptionText = "App notification channel"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(channelId, name, importance).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    fun showNotification(messageData: MessageData) {
+
+        val channelId = "$packageName-${getString(R.string.app_name)}"
+
+        val title = messageData.roomTitle
+        //방이름은 자신을 제외한 상대방의 이름으로 구성
+        val names = title.split(",") //방 제목은 최동규,채혜인,에뮬레이터 식으로 구성되므로 , 기준으로 파싱
+        var roomTitle = ""
+        for (name in names) {
+            if (name == Util.getMyName(this)) { //자신의 이름일 경우 건너 뜀
+                continue
+            }
+            roomTitle += "$name,"
+        }
+
+        roomTitle = roomTitle.substring(0, roomTitle.length - 1)//마지막 , 제거
+        CoroutineScope(Dispatchers.Main).launch {
+            var userId = ""
+            val users = messageData.roomName.split(",") //room name에 포함된 userid 파싱
+            for (user in users) {
+                if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
+                    userId = user
+                    break
+                }
+            }
+            val imgPath = "${Util.profileImgPath}/${userId}!.jpg"
+
+            val bitmap = withContext(Dispatchers.Default) {
+                getImage(imgPath)
+            }
+            val content = messageData.content
+            val notificationId = 1002
+            val builder = NotificationCompat.Builder(this@SocketReceiveService, channelId)
+                .setSmallIcon(R.drawable.ic_baseline_message_24) // 아이콘
+                .setContentTitle(roomTitle) // 제목
+                .setContentText(content) // 내용
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT) // 노티의 중요도
+                .setAutoCancel(true) // true라면 사용자가 노티를 터치했을때 사라지게함
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+
+            bitmap?.let {
+                builder.setLargeIcon(it)
+            }
+
+            with(NotificationManagerCompat.from(this@SocketReceiveService)) {
+                notify(notificationId, builder.build())
+            }
+        }
+
+    }
+
+    private fun getImage(url: String): Bitmap? {
+        // 네트워크로 이미지를 불러오기 위해 서브스레드 처리
+        var bitmap: Bitmap? = null
+
+        val urlConnection = URL(url)
+        val connection = urlConnection.openConnection()
+        connection.doInput = true
+        connection.connect()
+        val input = try {
+            connection.getInputStream()
+        } catch (e: Exception) {
+            return null // 프로필 이미지가 없다면 null 반환
+        }
+        bitmap = BitmapFactory.decodeStream(input)
+
+        return bitmap
     }
 }
 

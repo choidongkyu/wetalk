@@ -2,6 +2,7 @@ package com.dkchoi.wetalk
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -58,6 +59,10 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             adapter.addItem(chatItem)
             binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
             binding.contentEdit.setText("")
+        }
+
+        with(NotificationManagerCompat.from(this)) { // 채팅방 들어갈때 notification 메시지 삭제
+            cancel(1002)
         }
 
         HomeActivity.service?.registerListener(this@ChatActivity)
