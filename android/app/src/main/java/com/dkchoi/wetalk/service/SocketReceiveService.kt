@@ -2,6 +2,7 @@ package com.dkchoi.wetalk.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -11,7 +12,9 @@ import android.os.*
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.TaskStackBuilder
 import androidx.room.Room
+import com.dkchoi.wetalk.ChatActivity
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
@@ -24,7 +27,6 @@ import java.lang.Runnable
 import java.net.Socket
 import java.net.URL
 import java.nio.charset.StandardCharsets
-import kotlin.concurrent.thread
 
 
 class SocketReceiveService : Service() {
@@ -209,7 +211,7 @@ class SocketReceiveService : Service() {
                     break
                 }
             }
-            val imgPath = "${Util.profileImgPath}/${userId}!.jpg"
+            val imgPath = "${Util.profileImgPath}/${userId}.jpg"
 
             val bitmap = withContext(Dispatchers.Default) {
                 getImage(imgPath)
@@ -227,6 +229,22 @@ class SocketReceiveService : Service() {
             bitmap?.let {
                 builder.setLargeIcon(it)
             }
+
+            val chatIntent = Intent(this@SocketReceiveService, ChatActivity::class.java)
+
+            val chatRoom = withContext(Dispatchers.Default) { // db에서 chatroom 가져옴
+                db.chatRoomDao().getRoom(messageData.roomName)
+            }
+
+            chatIntent.putExtra("chatRoom", chatRoom)
+            val pendingIntent: PendingIntent? = TaskStackBuilder.create(this@SocketReceiveService).run {
+                // Add the intent, which inflates the back stack
+                addNextIntentWithParentStack(chatIntent)
+                // Get the PendingIntent containing the entire back stack
+                getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+
+            builder.setContentIntent(pendingIntent)
 
             with(NotificationManagerCompat.from(this@SocketReceiveService)) {
                 notify(notificationId, builder.build())

@@ -14,25 +14,6 @@ import com.dkchoi.wetalk.util.Util
 class HomeFragmentViewModel(application: Application) : AndroidViewModel(application) {
     val db = Room.databaseBuilder(application, AppDatabase::class.java, "user-database").build()
 
-    private val friendList: MutableList<String> by lazy {
-        mutableListOf()
-    }
-//    val friendListLiveData: MutableLiveData<List<User>> by lazy { // friend list를 observe하기 위한 livedata 생성
-//        MutableLiveData<List<User>>()
-//    }
-
-    val myNameLiveData: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
-
-    val myStatusLiveData: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
-
-    init {
-        loadMyName(application)
-    }
-
     fun getUserList(): LiveData<List<User>> {
         return db.userDao().getAll()
     }
@@ -102,10 +83,5 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
             friendList.sortBy { it.name }
             db.userDao().insertAll(*friendList.toTypedArray())
         }
-    }
-
-    private fun loadMyName(application: Application) {
-        myNameLiveData.value = Util.getMyName(application)
-        myStatusLiveData.value = Util.getMyStatusMsg(application)
     }
 }

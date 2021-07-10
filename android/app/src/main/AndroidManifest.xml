@@ -28,7 +28,8 @@
             android:exported="true">
         </service>
 
-        <activity android:name=".ChatActivity" />
+        <activity android:name=".ChatActivity"
+            android:parentActivityName=".HomeActivity"/>
         <activity android:name=".ProfileActivity" />
         <activity android:name=".ProfileMsgEditActivity" />
         <activity

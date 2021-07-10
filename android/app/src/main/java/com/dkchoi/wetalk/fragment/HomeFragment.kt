@@ -29,17 +29,11 @@ class HomeFragment : Fragment() {
     private val homeFragmentViewModel: HomeFragmentViewModel by viewModels() //친구목록 viewmodel 생성
     private lateinit var binding: FragmentHomeBinding
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
-
     @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home, container, false)
         val view = binding.root
 
@@ -55,13 +49,6 @@ class HomeFragment : Fragment() {
             getUserList().observe(viewLifecycleOwner, Observer {
                 friendListAdapter.updateItem(it)
                 binding.friendNumber.text = "${it.size}명"
-            })
-            myNameLiveData.observe(viewLifecycleOwner, Observer {
-                binding.myProfileName.text = it
-            })
-
-            myStatusLiveData.observe(viewLifecycleOwner, Observer {
-                binding.myProfileStatus.text = it
             })
         }
 
@@ -96,6 +83,12 @@ class HomeFragment : Fragment() {
             .apply(RequestOptions.circleCropTransform())
             .signature(ObjectKey(Util.getMyImg(requireContext())!!))
             .into(binding.myProfileImg)
+        loadMyName()
+    }
+
+    private fun loadMyName() {
+        binding.myProfileName.text = Util.getMyName(requireContext())
+        binding.myProfileStatus.text = Util.getMyStatusMsg(requireContext())
     }
 
     private fun showAddFriendDialog() {

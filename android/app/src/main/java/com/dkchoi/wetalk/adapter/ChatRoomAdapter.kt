@@ -11,16 +11,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.dkchoi.wetalk.ChatActivity
-import com.dkchoi.wetalk.ProfileActivity
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
-import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
-import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
-import com.google.gson.Gson
 
 class ChatRoomAdapter(): RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
     private lateinit var context: Context

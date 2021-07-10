@@ -19,7 +19,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.signature.ObjectKey
 import com.dkchoi.wetalk.ProfileMsgEditActivity
@@ -28,14 +27,10 @@ import com.dkchoi.wetalk.databinding.FragmentProfileBinding
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.util.Util
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.*
-import retrofit2.Call
-import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 
 
 class ProfileFragment : Fragment() {
@@ -84,10 +79,6 @@ class ProfileFragment : Fragment() {
     private val permissions = arrayOf<String>(
         Manifest.permission.CAMERA,
     )
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
