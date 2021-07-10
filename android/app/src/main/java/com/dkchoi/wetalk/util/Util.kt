@@ -7,9 +7,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.ContactsContract
 import android.telephony.TelephonyManager
+import android.util.Base64
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -20,6 +23,7 @@ import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.google.gson.Gson
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -241,6 +245,18 @@ class Util {
         @SuppressLint("SimpleDateFormat")
         fun Long.toDate(): String {
             return SimpleDateFormat("hh:mm a").format(Date(this))
+        }
+
+        fun bitmapToString(bitmap: Bitmap): String {
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 70, baos)
+            val bytes = baos.toByteArray()
+            return Base64.encodeToString(bytes, Base64.DEFAULT)
+        }
+
+        fun stringToBitmap(encodedString: String): Bitmap {
+            val encodeByte = Base64.decode(encodedString, Base64.DEFAULT)
+            return BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.size)
         }
     }
 }

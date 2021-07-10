@@ -18,6 +18,7 @@ import com.dkchoi.wetalk.ChatActivity
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
+import com.dkchoi.wetalk.data.MessageType
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
@@ -226,6 +227,10 @@ class SocketReceiveService : Service() {
                 .setAutoCancel(true) // true라면 사용자가 노티를 터치했을때 사라지게함
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
 
+            if (messageData.type == MessageType.IMAGE_MESSAGE) { //이미지를 보낼경우
+                builder.setContentText("${messageData.name}님이 이미지를 보냈습니다")
+            }
+
             bitmap?.let {
                 builder.setLargeIcon(it)
             }
@@ -237,12 +242,13 @@ class SocketReceiveService : Service() {
             }
 
             chatIntent.putExtra("chatRoom", chatRoom)
-            val pendingIntent: PendingIntent? = TaskStackBuilder.create(this@SocketReceiveService).run {
-                // Add the intent, which inflates the back stack
-                addNextIntentWithParentStack(chatIntent)
-                // Get the PendingIntent containing the entire back stack
-                getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
-            }
+            val pendingIntent: PendingIntent? =
+                TaskStackBuilder.create(this@SocketReceiveService).run {
+                    // Add the intent, which inflates the back stack
+                    addNextIntentWithParentStack(chatIntent)
+                    // Get the PendingIntent containing the entire back stack
+                    getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+                }
 
             builder.setContentIntent(pendingIntent)
 
@@ -254,7 +260,6 @@ class SocketReceiveService : Service() {
     }
 
     private fun getImage(url: String): Bitmap? {
-        // 네트워크로 이미지를 불러오기 위해 서브스레드 처리
         var bitmap: Bitmap? = null
 
         val urlConnection = URL(url)

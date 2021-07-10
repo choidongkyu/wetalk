@@ -146,6 +146,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
         var nameText: TextView = itemView.findViewById(R.id.name_text)
         var image: ImageView = itemView.findViewById(R.id.image_view)
         var sendTimeText: TextView = itemView.findViewById(R.id.send_time_text)
+        var profileImg: ImageView = itemView.findViewById(R.id.profile_img)
 
         fun setItem(item: ChatItem, context: Context) {
             val option = MultiTransformation(CenterCrop(), RoundedCorners(8))
@@ -153,8 +154,14 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
                 .load(item.content)
                 .apply(RequestOptions.bitmapTransform(option))
                 .into(image)
+
             nameText.text = item.name
             sendTimeText.text = item.sendTime
+
+            Glide.with(context)
+                .load("${Util.profileImgPath}/${item.id}.jpg")
+                .apply(RequestOptions.circleCropTransform())
+                .into(profileImg)
         }
 
     }
@@ -198,7 +205,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
                         messageData.id,
                         messageData.content,
                         messageData.sendTime.toDate(),
-                        ViewType.RIGHT_MESSAGE
+                        ViewType.RIGHT_IMAGE
                     )
                 )
             }

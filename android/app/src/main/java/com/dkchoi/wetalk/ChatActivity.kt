@@ -1,7 +1,14 @@
 package com.dkchoi.wetalk
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
@@ -37,6 +44,25 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             .build()
     }
 
+    //갤러리에서 사진 선택 후 불리는 result activity
+    private val requestActivity =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) { //갤러리 캡쳐 결과값
+                val selectedImageUri = it.data!!.data
+
+                val chatItem = ChatItem(
+                    "",
+                    "",
+                    selectedImageUri.toString(),
+                    System.currentTimeMillis().toDate(),
+                    ViewType.RIGHT_IMAGE
+                )
+                adapter.addItem(chatItem)
+                binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+                binding.contentEdit.setText("")
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_chat)
@@ -63,6 +89,13 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             binding.contentEdit.setText("")
         }
 
+        binding.imageBtn.setOnClickListener {
+            val intent = Intent()
+            intent.type = "image/*"
+            intent.action = Intent.ACTION_GET_CONTENT
+            requestActivity.launch(intent)
+        }
+
         with(NotificationManagerCompat.from(this)) { // 채팅방 들어갈때 notification 메시지 삭제
             cancel(1002)
         }
@@ -81,6 +114,41 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     override fun onPause() {
         super.onPause()
         HomeActivity.service?.registerListener(null)
+    }
+
+    private fun sendImage(request: String) {
+        val messageData: MessageData = MessageData(
+            MessageType.IMAGE_MESSAGE,
+            Util.getMyName(this)!!,
+            getPhoneNumber(this),
+            request,
+            System.currentTimeMillis(),
+            chatRoom.roomName,
+            chatRoom.roomTitle
+        )
+        val jsonMessage = gson.toJson(messageData) // message data를 json형태로 변환
+
+
+        chatRoom.messageDatas =
+            chatRoom.messageDatas + jsonMessage + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+
+        lifecycleScope.launch(Dispatchers.Default) {
+            db.chatRoomDao().updateChatRoom(chatRoom) //로컬db에 메시지 저장
+        }
+
+        val message =
+            "message::${chatRoom.roomName}::${jsonMessage}\r\n" // \r\n을 메시지 끝에 붙여야 java에서 메시지의 끝임을 알 수 있음
+
+        //socket으로 메시지 send
+        Thread(Runnable {
+            val socket =
+                Socket(SERVER_IP, SERVER_PORT)
+            val pw = PrintWriter(
+                OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
+                true
+            )
+            pw.println(message)
+        }).start()
     }
 
     private fun sendMessage(request: String) {
@@ -202,7 +270,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                 db.chatRoomDao().updateChatRoom(chatRoom)
             }
         }
-        if(messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
+        if (messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
             addChat(messageData) // 리사이클러뷰에 추가
         }
 
