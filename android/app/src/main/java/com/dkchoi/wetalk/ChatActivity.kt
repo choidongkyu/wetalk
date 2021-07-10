@@ -17,6 +17,7 @@ import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_IP
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_PORT
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
+import com.dkchoi.wetalk.util.Util.Companion.getPhoneNumber
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +53,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             sendMessage(binding.contentEdit.text.toString())
             val chatItem = ChatItem(
                 "",
+                "",
                 binding.contentEdit.text.toString(),
                 System.currentTimeMillis().toDate(),
                 ViewType.RIGHT_MESSAGE
@@ -85,6 +87,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         val messageData: MessageData = MessageData(
             MessageType.TEXT_MESSAGE,
             Util.getMyName(this)!!,
+            getPhoneNumber(this),
             request,
             System.currentTimeMillis(),
             chatRoom.roomName,
@@ -123,6 +126,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                 adapter.addItem(
                     ChatItem(
                         "",
+                        "",
                         message,
                         "",
                         ViewType.CENTER_MESSAGE
@@ -141,6 +145,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             adapter.addItem(
                 ChatItem(
                     messageData.name,
+                    messageData.id,
                     messageData.content,
                     messageData.sendTime.toDate(),
                     ViewType.LEFT_MESSAGE
@@ -151,6 +156,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             adapter.addItem(
                 ChatItem(
                     messageData.name,
+                    messageData.id,
                     messageData.content,
                     messageData.sendTime.toDate(),
                     ViewType.LEFT_IMAGE

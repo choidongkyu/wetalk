@@ -12,6 +12,7 @@ import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.signature.ObjectKey
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatItem
 import com.dkchoi.wetalk.data.MessageData
@@ -79,7 +80,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
             }
             is LeftViewHolder -> {
                 val item = items[position]
-                (holder as LeftViewHolder).setItem(item)
+                (holder as LeftViewHolder).setItem(item, context)
             }
             is RightViewHolder -> {
                 val item = items[position]
@@ -117,11 +118,16 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
         var nameText: TextView = itemView.findViewById(R.id.name_text)
         var contentText: TextView = itemView.findViewById(R.id.msg_text)
         var sendTimeText: TextView = itemView.findViewById(R.id.send_time_text)
+        var profileImg: ImageView = itemView.findViewById(R.id.profile_img)
 
-        fun setItem(item: ChatItem) {
+        fun setItem(item: ChatItem, context: Context) {
             nameText.text = item.name
             contentText.text = item.content
             sendTimeText.text = item.sendTime
+            Glide.with(context)
+                .load("${Util.profileImgPath}/${item.id}.jpg")
+                .apply(RequestOptions.circleCropTransform())
+                .into(profileImg)
         }
 
     }
@@ -178,6 +184,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
                 items.add(
                     ChatItem(
                         messageData.name,
+                        messageData.id,
                         messageData.content,
                         messageData.sendTime.toDate(),
                         ViewType.RIGHT_MESSAGE
@@ -188,6 +195,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
                 items.add(
                     ChatItem(
                         messageData.name,
+                        messageData.id,
                         messageData.content,
                         messageData.sendTime.toDate(),
                         ViewType.RIGHT_MESSAGE
@@ -199,6 +207,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
                 items.add(
                     ChatItem(
                         messageData.name,
+                        messageData.id,
                         messageData.content,
                         messageData.sendTime.toDate(),
                         ViewType.LEFT_MESSAGE
@@ -209,6 +218,7 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
                 items.add(
                     ChatItem(
                         messageData.name,
+                        messageData.id,
                         messageData.content,
                         messageData.sendTime.toDate(),
                         ViewType.LEFT_IMAGE
