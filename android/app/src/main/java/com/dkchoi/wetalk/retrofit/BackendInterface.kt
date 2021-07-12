@@ -51,9 +51,16 @@ interface BackendInterface {
 
     @Multipart
     @POST("upload.php")
-    suspend fun uploadFile(
+    suspend fun uploadFile( // 프로필 이미지지 업로드시 사용
         @Part file: MultipartBody.Part,
         @Part("id") requestBody: RequestBody
     ): Int
 
+    @Multipart
+    @POST("upload.php")
+    suspend fun uploadImage(
+        @Part file: MultipartBody.Part,
+        @Part("name") name: RequestBody,
+        @Part("roomName") roomName: RequestBody
+    ): Int
 }

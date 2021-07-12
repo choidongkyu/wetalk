@@ -39,9 +39,8 @@ class SocketReceiveService : Service() {
     private var listener: IReceiveListener? = null
     private var serviceHandler: Handler? = null
 
-    private val db: AppDatabase by lazy {
-        Room.databaseBuilder(this, AppDatabase::class.java, "chatRoom-database")
-            .build()
+    private val db: AppDatabase? by lazy {
+        AppDatabase.getInstance(this, "chatRoom-database")
     }
 
     interface IReceiveListener {
@@ -137,8 +136,8 @@ class SocketReceiveService : Service() {
         val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
         if (messageData.name.equals(user.name)) return // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
 
-        if (db.chatRoomDao()
-                .getRoom(messageData.roomName) == null
+        if (db?.chatRoomDao()
+                ?.getRoom(messageData.roomName) == null
         ) { // 로컬 db에 존재하는 방이 없다면
             var userId = ""
             val users = messageData.roomName.split(",") //room name에 포함된 userid 파싱
@@ -159,14 +158,14 @@ class SocketReceiveService : Service() {
                 ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
 
-            db.chatRoomDao().insertChatRoom(chatRoom)
+            db?.chatRoomDao()?.insertChatRoom(chatRoom)
         } else { //기존에 방이 존재한다면
-            val chatRoom = db.chatRoomDao().getRoom(messageData.roomName)
+            val chatRoom = db?.chatRoomDao()?.getRoom(messageData.roomName)
             //chatroom에 메시지 추가
-            chatRoom.messageDatas =
-                chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+            chatRoom?.messageDatas =
+                chatRoom?.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
 
-            db.chatRoomDao().updateChatRoom(chatRoom)
+            chatRoom?.let { db?.chatRoomDao()?.updateChatRoom(it) }
         }
         showNotification(messageData)
     }
@@ -238,7 +237,7 @@ class SocketReceiveService : Service() {
             val chatIntent = Intent(this@SocketReceiveService, ChatActivity::class.java)
 
             val chatRoom = withContext(Dispatchers.Default) { // db에서 chatroom 가져옴
-                db.chatRoomDao().getRoom(messageData.roomName)
+                db?.chatRoomDao()?.getRoom(messageData.roomName)
             }
 
             chatIntent.putExtra("chatRoom", chatRoom)

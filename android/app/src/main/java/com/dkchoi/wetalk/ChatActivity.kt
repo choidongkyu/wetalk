@@ -8,15 +8,22 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.signature.ObjectKey
 import com.dkchoi.wetalk.adapter.ChatAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
+import com.dkchoi.wetalk.retrofit.BackendInterface
+import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.JOIN_KEY
@@ -29,6 +36,11 @@ import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
@@ -39,9 +51,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     private lateinit var adapter: ChatAdapter
     private lateinit var chatRoom: ChatRoom
 
-    private val db: AppDatabase by lazy {
-        Room.databaseBuilder(this, AppDatabase::class.java, "chatRoom-database")
-            .build()
+    private val db: AppDatabase? by lazy {
+        AppDatabase.getInstance(this, "chatRoom-database")
     }
 
     //갤러리에서 사진 선택 후 불리는 result activity
@@ -49,6 +60,18 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) { //갤러리 캡쳐 결과값
                 val selectedImageUri = it.data!!.data
+
+                var bitmap: Bitmap? = null
+                bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
+                    MediaStore.Images.Media.getBitmap(contentResolver, it.data?.data)
+                } else {
+                    val source: ImageDecoder.Source = ImageDecoder.createSource(
+                        contentResolver,
+                        it.data?.data!!
+                    )
+                    ImageDecoder.decodeBitmap(source)
+                }
+                bitmap?.let { it1 -> uploadUriImage(it1) } //bitmap을 이미지 저장후 서버에 업로드
 
                 val chatItem = ChatItem(
                     "",
@@ -92,6 +115,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         binding.imageBtn.setOnClickListener {
             val intent = Intent()
             intent.type = "image/*"
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             intent.action = Intent.ACTION_GET_CONTENT
             requestActivity.launch(intent)
         }
@@ -99,16 +123,11 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         with(NotificationManagerCompat.from(this)) { // 채팅방 들어갈때 notification 메시지 삭제
             cancel(1002)
         }
-
-        HomeActivity.service?.registerListener(this@ChatActivity)
-
-//        val user = getMyUser(this)
-//        MainReceiveThread.getInstance(user)
-//            .setListener(this)// 소켓으로 메시지가 들어온다면 chatactivity가 받을수 있도록 리스너 설정
     }
 
     override fun onResume() {
         super.onResume()
+        HomeActivity.service?.registerListener(this@ChatActivity)
     }
 
     override fun onPause() {
@@ -121,7 +140,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             MessageType.IMAGE_MESSAGE,
             Util.getMyName(this)!!,
             getPhoneNumber(this),
-            request,
+            "${Util.chatImgPath}/${chatRoom.roomName}/$request.jpg", // ex) +821026595819,+15555215558/2999919293.jpg
             System.currentTimeMillis(),
             chatRoom.roomName,
             chatRoom.roomTitle
@@ -133,7 +152,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             chatRoom.messageDatas + jsonMessage + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
 
         lifecycleScope.launch(Dispatchers.Default) {
-            db.chatRoomDao().updateChatRoom(chatRoom) //로컬db에 메시지 저장
+            db?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
         }
 
         val message =
@@ -168,7 +187,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             chatRoom.messageDatas + jsonMessage + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
 
         lifecycleScope.launch(Dispatchers.Default) {
-            db.chatRoomDao().updateChatRoom(chatRoom) //로컬db에 메시지 저장
+            db?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
         }
 
         val message =
@@ -238,8 +257,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
         if (messageData.name.equals(getMyName(this))) return // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
         lifecycleScope.launch(Dispatchers.Default) {
-            if (db.chatRoomDao()
-                    .getRoom(messageData.roomName) == null
+            if (db?.chatRoomDao()
+                    ?.getRoom(messageData.roomName) == null
             ) { // 로컬 db에 존재하는 방이 없다면
                 var userId = ""
                 val users = messageData.roomName.split(",") //room name에 포함된 userid 파싱
@@ -260,19 +279,67 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                     ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
 
-                db.chatRoomDao().insertChatRoom(chatRoom)
+                db?.chatRoomDao()?.insertChatRoom(chatRoom)
             } else { //기존에 방이 존재한다면
-                val chatRoom = db.chatRoomDao().getRoom(messageData.roomName)
+                val chatRoom = db?.chatRoomDao()?.getRoom(messageData.roomName)
                 //chatroom에 메시지 추가
-                chatRoom.messageDatas =
-                    chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+                chatRoom?.messageDatas =
+                    chatRoom?.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
 
-                db.chatRoomDao().updateChatRoom(chatRoom)
+                chatRoom?.let { db?.chatRoomDao()?.updateChatRoom(it) }
             }
         }
         if (messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
             addChat(messageData) // 리사이클러뷰에 추가
         }
+    }
 
+    private suspend fun uploadImage(path: String) {
+        val file = File(path)
+        val requestBody: RequestBody = RequestBody.create(MediaType.parse("image/*"), file)
+        val requestFile: MultipartBody.Part =
+            MultipartBody.Part.createFormData("image", file.name, requestBody)
+
+        val content = System.currentTimeMillis().toString() //저장될 이미지의 이름을 현재 시간으로 지정
+        val name = RequestBody.create(MediaType.parse("text/plain"), content)
+        val roomName = RequestBody.create(MediaType.parse("text/plain"), chatRoom.roomName)
+
+        val server = ServiceGenerator.retrofit.create(BackendInterface::class.java)
+
+        val result = server.uploadImage(requestFile, name, roomName)
+        if (result == 200) {
+            Log.d("test11", "업로드 성공")
+            sendImage(content)
+        } else {
+            Log.d("test11", "업로드 실패 result = $result")
+        }
+    }
+
+    private suspend fun saveBitmapToJpeg(bitmap: Bitmap) {
+        Log.d("test11", "saveBitmaptoJpeg called")
+
+        //내부 저장소 캐쉬 경로 받아옴
+        val storage: File = cacheDir
+        //저장할 파일 이름
+        val fileName = "tempImage.jpg"
+        //파일 인스턴스 생성
+        val tempFile = File(storage, fileName)
+        //빈파일 자동으로 생성
+        tempFile.createNewFile()
+        //stream 생성
+        val out = FileOutputStream(tempFile)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+        out.close()
+
+        uploadImage(tempFile.path) //서버에 업로드
+    }
+
+    private fun uploadUriImage(bitmap: Bitmap) { //uri 이미지를 서버에 전송
+        Log.d("test11", "uploadUriImage called")
+        lifecycleScope.launch {
+            binding.progressbar.visibility = View.VISIBLE
+            saveBitmapToJpeg(bitmap)
+            binding.progressbar.visibility = View.GONE
+        }
     }
 }

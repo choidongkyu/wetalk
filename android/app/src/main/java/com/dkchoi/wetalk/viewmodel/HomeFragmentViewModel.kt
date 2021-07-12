@@ -12,10 +12,10 @@ import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
 
 class HomeFragmentViewModel(application: Application) : AndroidViewModel(application) {
-    val db = Room.databaseBuilder(application, AppDatabase::class.java, "user-database").build()
+    val db = AppDatabase.getInstance(application, "user-database")
 
     fun getUserList(): LiveData<List<User>> {
-        return db.userDao().getAll()
+        return db!!.userDao().getAll()
     }
 
     suspend fun refreshUserList(application: Application) {
@@ -46,7 +46,7 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
         }
         if(friendList.size != 0) {
             friendList.sortBy { it.name }
-            db.userDao().insertAll(*friendList.toTypedArray())
+            db?.userDao()?.insertAll(*friendList.toTypedArray())
         }
     }
 
@@ -81,7 +81,7 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
         }
         if(friendList.size != 0) {
             friendList.sortBy { it.name }
-            db.userDao().insertAll(*friendList.toTypedArray())
+            db?.userDao()?.insertAll(*friendList.toTypedArray())
         }
     }
 }

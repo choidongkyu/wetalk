@@ -8,26 +8,26 @@ import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.room.AppDatabase
 
 class ChatRoomViewModel(application: Application) : AndroidViewModel(application) {
-    private val db =
-        Room.databaseBuilder(application, AppDatabase::class.java, "chatRoom-database").build()
+    private val db = AppDatabase.getInstance(application, "chatRoom-database")
+
 
     fun getChatRooms(): LiveData<List<ChatRoom>> {
-        return db.chatRoomDao().getAll()
+        return db!!.chatRoomDao().getAll()
     }
 
     fun getChatRoom(name: String): ChatRoom {
-        return db.chatRoomDao().getRoom(name)
+        return db!!.chatRoomDao().getRoom(name)
     }
 
     suspend fun insertRoom(chatRoom: ChatRoom) {
-        db.chatRoomDao().insertChatRoom(chatRoom)
+        db!!.chatRoomDao().insertChatRoom(chatRoom)
     }
 
     suspend fun deleteRoom(chatRoom: ChatRoom) {
-        db.chatRoomDao().deleteChatRoom(chatRoom)
+        db!!.chatRoomDao().deleteChatRoom(chatRoom)
     }
 
     suspend fun updateRoom(chatRoom: ChatRoom) {
-        db.chatRoomDao().updateChatRoom(chatRoom)
+        db!!.chatRoomDao().updateChatRoom(chatRoom)
     }
 }

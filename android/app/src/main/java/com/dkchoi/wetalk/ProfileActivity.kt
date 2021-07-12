@@ -21,9 +21,8 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 
 class ProfileActivity : AppCompatActivity() {
-    private val db: AppDatabase by lazy {
-        Room.databaseBuilder(this, AppDatabase::class.java, "chatRoom-database")
-            .allowMainThreadQueries().build()
+    private val db: AppDatabase? by lazy {
+        AppDatabase.getInstance(this, "chatRoom-database")
     }
 
     private lateinit var user: User
@@ -76,13 +75,13 @@ class ProfileActivity : AppCompatActivity() {
         var roomName = "${user.id},${Util.getPhoneNumber(this)}" //roomName ex - +821093230128,+821026595819
         val roomNameArray = roomName.split(",").sorted() // room name 통일위하여 sort
         roomName = "${roomNameArray[0]},${roomNameArray[1]}"
-        var chatRoom = db.chatRoomDao().getRoom(roomName)
+        var chatRoom = db?.chatRoomDao()?.getRoom(roomName)
 
         if (chatRoom == null) { //기존에 존재하는 room이 없을경우 room 생성
             val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
 
             chatRoom = ChatRoom(roomName, "${user.name},${Util.getMyName(this)}", "", imgPath, null)
-            db.chatRoomDao().insertChatRoom(chatRoom)
+            db?.chatRoomDao()?.insertChatRoom(chatRoom)
         }
 
         //서버에 room 생성 요청

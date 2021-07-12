@@ -32,7 +32,8 @@ class Util {
 
         val gson = Gson()
 
-        const val profileImgPath = "http://49.247.19.12/profile_image";
+        const val profileImgPath = "http://49.247.19.12/profile_image"
+        const val chatImgPath = "http://49.247.19.12/chatImage"
         fun setSession(id: String, context: Context) {
             val sharedPreferences: SharedPreferences =
                 context.getSharedPreferences(
@@ -159,12 +160,7 @@ class Util {
 
         suspend fun fetchUserData(application: Application) {
             // 서버에서 받아온 유저 정보를 데이터베이스에 저장하기 위해 db객체 생성
-            val db = Room.databaseBuilder(
-                application,
-                AppDatabase::class.java, "user-database"
-            )
-                .allowMainThreadQueries()
-                .build()
+            val db = AppDatabase.getInstance(application, "user-database")
 
             val phoneBooks: List<PhoneBook> = Util.getContacts(application) //전화번호부 가져옴
 
@@ -190,7 +186,7 @@ class Util {
             }
             if (friendList.size != 0) {
                 friendList.sortBy { it.name }
-                db.userDao().insertAll(*friendList.toTypedArray())
+                db?.userDao()?.insertAll(*friendList.toTypedArray())
             }
         }
 
@@ -245,18 +241,6 @@ class Util {
         @SuppressLint("SimpleDateFormat")
         fun Long.toDate(): String {
             return SimpleDateFormat("hh:mm a").format(Date(this))
-        }
-
-        fun bitmapToString(bitmap: Bitmap): String {
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 70, baos)
-            val bytes = baos.toByteArray()
-            return Base64.encodeToString(bytes, Base64.DEFAULT)
-        }
-
-        fun stringToBitmap(encodedString: String): Bitmap {
-            val encodeByte = Base64.decode(encodedString, Base64.DEFAULT)
-            return BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.size)
         }
     }
 }
