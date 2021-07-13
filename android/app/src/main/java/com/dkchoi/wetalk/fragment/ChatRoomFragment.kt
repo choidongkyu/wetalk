@@ -1,12 +1,14 @@
 package com.dkchoi.wetalk.fragment
 
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -43,6 +45,12 @@ class ChatRoomFragment : Fragment() {
         val view = binding.root
 
         val chatRoomAdapter = ChatRoomAdapter()
+        chatRoomAdapter.setOnItemLongClickListener(object : ChatRoomAdapter.OnItemLongClickEventListener {
+            override fun onItemLongClick(view: View, pos: Int) {
+                showDialog(pos)
+            }
+
+        })
         binding.recyclerView.apply {
             adapter = chatRoomAdapter
             layoutManager = LinearLayoutManager(activity)
@@ -63,5 +71,20 @@ class ChatRoomFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("test11", "chatroom fragment destroy called")
+    }
+
+    private fun showDialog(position: Int) {
+        val listItems = arrayOf<CharSequence>("읽음", "나가기")
+        val builder = AlertDialog.Builder(requireContext())
+        val adapter = (binding.recyclerView.adapter as ChatRoomAdapter)
+        builder.setTitle(adapter.getRoomTitle(position))
+            .setItems(listItems, DialogInterface.OnClickListener { dialog, which ->
+                when (which) {
+                    1 -> lifecycleScope.launch {
+                        viewModel.deleteRoom(adapter.getChatRoom(position))
+                    }
+                }
+            })
+        builder.show()
     }
 }

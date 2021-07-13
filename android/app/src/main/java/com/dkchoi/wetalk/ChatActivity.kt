@@ -94,7 +94,6 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                 } else {
                     clipData.let { clipData ->
                         for (i in 0 until clipDataSize!!) { //선택 한 사진수만큼 반복
-
                             val selectedImageUri = clipData.getItemAt(i).uri
                             var bitmap: Bitmap? = null
                             bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
