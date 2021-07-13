@@ -58,9 +58,9 @@ interface BackendInterface {
 
     @Multipart
     @POST("upload.php")
-    suspend fun uploadImage(
+    fun uploadImage(
         @Part file: MultipartBody.Part,
         @Part("name") name: RequestBody,
         @Part("roomName") roomName: RequestBody
-    ): Int
+    ): Call<Int>
 }

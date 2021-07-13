@@ -39,12 +39,16 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener {
     private lateinit var binding: ActivityChatBinding
@@ -59,30 +63,38 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     private val requestActivity =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) { //갤러리 캡쳐 결과값
-                val selectedImageUri = it.data!!.data
+                val clipData = it?.data?.clipData
+                val clipDataSize = clipData?.itemCount
+                clipData?.let { clipData ->
+                    for (i in 0 until clipDataSize!!) { //선택 한 사진수만큼 반복
 
-                var bitmap: Bitmap? = null
-                bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
-                    MediaStore.Images.Media.getBitmap(contentResolver, it.data?.data)
-                } else {
-                    val source: ImageDecoder.Source = ImageDecoder.createSource(
-                        contentResolver,
-                        it.data?.data!!
-                    )
-                    ImageDecoder.decodeBitmap(source)
+                        val selectedImageUri = clipData.getItemAt(i).uri
+                        var bitmap: Bitmap? = null
+                        bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
+                            MediaStore.Images.Media.getBitmap(contentResolver, selectedImageUri)
+                        } else {
+                            val source: ImageDecoder.Source = ImageDecoder.createSource(
+                                contentResolver,
+                                selectedImageUri
+                            )
+                            ImageDecoder.decodeBitmap(source)
+                        }
+
+                        bitmap?.let { uploadUriImage(bitmap) } //bitmap을 이미지 저장후 서버에 업로드
+
+
+                        val chatItem = ChatItem(
+                            "",
+                            "",
+                            selectedImageUri.toString(),
+                            System.currentTimeMillis().toDate(),
+                            ViewType.RIGHT_IMAGE
+                        )
+                        adapter.addItem(chatItem)
+                        binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+                        binding.contentEdit.setText("")
+                    }
                 }
-                bitmap?.let { it1 -> uploadUriImage(it1) } //bitmap을 이미지 저장후 서버에 업로드
-
-                val chatItem = ChatItem(
-                    "",
-                    "",
-                    selectedImageUri.toString(),
-                    System.currentTimeMillis().toDate(),
-                    ViewType.RIGHT_IMAGE
-                )
-                adapter.addItem(chatItem)
-                binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
-                binding.contentEdit.setText("")
             }
         }
 
@@ -116,7 +128,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             val intent = Intent()
             intent.type = "image/*"
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            intent.action = Intent.ACTION_GET_CONTENT
+            intent.action = Intent.ACTION_PICK
             requestActivity.launch(intent)
         }
 
@@ -294,38 +306,53 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         }
     }
 
-    private suspend fun uploadImage(path: String) {
+    private fun uploadImage(path: String) {
         val file = File(path)
         val requestBody: RequestBody = RequestBody.create(MediaType.parse("image/*"), file)
         val requestFile: MultipartBody.Part =
             MultipartBody.Part.createFormData("image", file.name, requestBody)
 
-        val content = System.currentTimeMillis().toString() //저장될 이미지의 이름을 현재 시간으로 지정
+        //저장될 이미지의 이름을 고유 uuid로 지정
+        val content = UUID.randomUUID().toString()
+
         val name = RequestBody.create(MediaType.parse("text/plain"), content)
         val roomName = RequestBody.create(MediaType.parse("text/plain"), chatRoom.roomName)
 
         val server = ServiceGenerator.retrofit.create(BackendInterface::class.java)
 
-        val result = server.uploadImage(requestFile, name, roomName)
-        if (result == 200) {
-            Log.d("test11", "업로드 성공")
-            sendImage(content)
-        } else {
-            Log.d("test11", "업로드 실패 result = $result")
-        }
+        server.uploadImage(requestFile, name, roomName).enqueue(object : Callback<Int> {
+            override fun onResponse(call: Call<Int>, response: Response<Int>) {
+                if (response.body() == 200) {
+                    Log.d("test11", "업로드 성공")
+                    sendImage(content)
+                } else {
+                    Log.d("test11", "업로드 실패 result = ${response.body()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Int>, t: Throwable) {
+                Log.d("test11", "업로드 실패 - ${t.printStackTrace()}")
+            }
+
+        })
+
     }
 
-    private suspend fun saveBitmapToJpeg(bitmap: Bitmap) {
+    private fun saveBitmapToJpeg(bitmap: Bitmap) {
         Log.d("test11", "saveBitmaptoJpeg called")
 
         //내부 저장소 캐쉬 경로 받아옴
         val storage: File = cacheDir
+
         //저장할 파일 이름
-        val fileName = "tempImage.jpg"
+        val fileName = "temp.jpg"
+
         //파일 인스턴스 생성
         val tempFile = File(storage, fileName)
+
         //빈파일 자동으로 생성
         tempFile.createNewFile()
+
         //stream 생성
         val out = FileOutputStream(tempFile)
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
@@ -336,10 +363,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
     private fun uploadUriImage(bitmap: Bitmap) { //uri 이미지를 서버에 전송
         Log.d("test11", "uploadUriImage called")
-        lifecycleScope.launch {
-            binding.progressbar.visibility = View.VISIBLE
-            saveBitmapToJpeg(bitmap)
-            binding.progressbar.visibility = View.GONE
-        }
+        binding.progressbar.visibility = View.VISIBLE
+        saveBitmapToJpeg(bitmap)
+        binding.progressbar.visibility = View.GONE
     }
 }
