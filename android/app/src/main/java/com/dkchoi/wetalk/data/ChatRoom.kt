@@ -12,5 +12,6 @@ data class ChatRoom(
     var roomTitle: String, // 채팅방 제목 - 사용자의 이름으로 구성
     var messageDatas: String, //채팅방에서 주고받은 대화들
     var chatProfileImg: String, // 채팅방 이미지
-    var lastTime:String?
+    var lastTime:String?,
+    var unReadCount:Int = 0
 ) : Parcelable

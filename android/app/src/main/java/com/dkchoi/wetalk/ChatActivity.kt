@@ -168,6 +168,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     override fun onResume() {
         super.onResume()
         HomeActivity.service?.registerListener(this@ChatActivity)
+        chatRoom.unReadCount = 0
+        db?.chatRoomDao()?.updateChatRoom(chatRoom)
     }
 
     override fun onPause() {

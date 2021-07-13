@@ -73,6 +73,15 @@ class ChatRoomAdapter() : RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
                 lastDataMessage.content
             }
             holder.roomLastTime.text = lastDataMessage.sendTime.toDate()
+
+
+            holder.unReadCount.visibility =
+                if (chatRoom.unReadCount != 0) { //읽지 않은 메시지가 0이 아니라면
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
+            holder.unReadCount.text = chatRoom.unReadCount.toString()
         }
     }
 
@@ -84,7 +93,7 @@ class ChatRoomAdapter() : RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
         return getRoomTitle(chatRoomList[pos].roomTitle)
     }
 
-    fun getChatRoom(pos:Int): ChatRoom {
+    fun getChatRoom(pos: Int): ChatRoom {
         return chatRoomList[pos]
     }
 
@@ -98,6 +107,7 @@ class ChatRoomAdapter() : RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
         val roomTitle: TextView = itemView.findViewById(R.id.room_title)
         val roomLastMessage: TextView = itemView.findViewById(R.id.last_message)
         val roomLastTime: TextView = itemView.findViewById(R.id.last_time)
+        val unReadCount: TextView = itemView.findViewById(R.id.unread_num)
 
         init {
             itemView.setOnClickListener {

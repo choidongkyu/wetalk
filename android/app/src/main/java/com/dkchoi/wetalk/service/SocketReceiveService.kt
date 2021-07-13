@@ -154,7 +154,8 @@ class SocketReceiveService : Service() {
                     messageData.roomTitle,
                     "$message|",
                     imgPath,
-                    null
+                    null,
+                    1
                 ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
 
@@ -162,10 +163,13 @@ class SocketReceiveService : Service() {
         } else { //기존에 방이 존재한다면
             val chatRoom = db?.chatRoomDao()?.getRoom(messageData.roomName)
             //chatroom에 메시지 추가
-            chatRoom?.messageDatas =
-                chatRoom?.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+            chatRoom?.let {
+                chatRoom.messageDatas =
+                    chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
 
-            chatRoom?.let { db?.chatRoomDao()?.updateChatRoom(it) }
+                chatRoom.unReadCount += 1
+                db?.chatRoomDao()?.updateChatRoom(it)
+            }
         }
         showNotification(messageData)
     }

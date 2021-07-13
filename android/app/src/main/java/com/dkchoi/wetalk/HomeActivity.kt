@@ -155,7 +155,8 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                         messageData.roomTitle,
                         "$message|",
                         imgPath,
-                        null
+                        null,
+                        1
                     ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
 
@@ -165,6 +166,7 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                 //chatroom에 메시지 추가
                 chatRoom.messageDatas =
                     chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+                chatRoom.unReadCount += 1
 
                 chatRoomViewModel.updateRoom(chatRoom)
             }
