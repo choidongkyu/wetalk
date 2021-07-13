@@ -65,36 +65,65 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             if (it.resultCode == Activity.RESULT_OK && it.data?.data != null) { //갤러리 캡쳐 결과값
                 val clipData = it?.data?.clipData
                 val clipDataSize = clipData?.itemCount
-                clipData?.let { clipData ->
-                    for (i in 0 until clipDataSize!!) { //선택 한 사진수만큼 반복
-
-                        val selectedImageUri = clipData.getItemAt(i).uri
-                        var bitmap: Bitmap? = null
-                        bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
-                            MediaStore.Images.Media.getBitmap(contentResolver, selectedImageUri)
-                        } else {
-                            val source: ImageDecoder.Source = ImageDecoder.createSource(
-                                contentResolver,
-                                selectedImageUri
-                            )
-                            ImageDecoder.decodeBitmap(source)
-                        }
-
-                        bitmap?.let { uploadUriImage(bitmap) } //bitmap을 이미지 저장후 서버에 업로드
-
-
-                        val chatItem = ChatItem(
-                            "",
-                            "",
-                            selectedImageUri.toString(),
-                            System.currentTimeMillis().toDate(),
-                            ViewType.RIGHT_IMAGE
+                if (clipData == null) { //이미지를 하나만 선택할 경우 clipData가 null이 올수 있음
+                    val selectedImageUri = it?.data?.data!!
+                    var bitmap: Bitmap? = null
+                    bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
+                        MediaStore.Images.Media.getBitmap(contentResolver, selectedImageUri)
+                    } else {
+                        val source: ImageDecoder.Source = ImageDecoder.createSource(
+                            contentResolver,
+                            selectedImageUri
                         )
-                        adapter.addItem(chatItem)
-                        binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
-                        binding.contentEdit.setText("")
+                        ImageDecoder.decodeBitmap(source)
+                    }
+
+                    bitmap?.let { uploadUriImage(bitmap!!) } //bitmap을 이미지 저장후 서버에 업로드
+
+
+                    val chatItem = ChatItem(
+                        "",
+                        "",
+                        selectedImageUri.toString(),
+                        System.currentTimeMillis().toDate(),
+                        ViewType.RIGHT_IMAGE
+                    )
+                    adapter.addItem(chatItem)
+                    binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+                    binding.contentEdit.setText("")
+                } else {
+                    clipData.let { clipData ->
+                        for (i in 0 until clipDataSize!!) { //선택 한 사진수만큼 반복
+
+                            val selectedImageUri = clipData.getItemAt(i).uri
+                            var bitmap: Bitmap? = null
+                            bitmap = if (Build.VERSION.SDK_INT < 29) { // uri 이미지를 bitmap으로 변환
+                                MediaStore.Images.Media.getBitmap(contentResolver, selectedImageUri)
+                            } else {
+                                val source: ImageDecoder.Source = ImageDecoder.createSource(
+                                    contentResolver,
+                                    selectedImageUri
+                                )
+                                ImageDecoder.decodeBitmap(source)
+                            }
+
+                            bitmap?.let { uploadUriImage(bitmap!!) } //bitmap을 이미지 저장후 서버에 업로드
+
+
+                            val chatItem = ChatItem(
+                                "",
+                                "",
+                                selectedImageUri.toString(),
+                                System.currentTimeMillis().toDate(),
+                                ViewType.RIGHT_IMAGE
+                            )
+                            adapter.addItem(chatItem)
+                            binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+                            binding.contentEdit.setText("")
+                        }
                     }
                 }
+
             }
         }
 
