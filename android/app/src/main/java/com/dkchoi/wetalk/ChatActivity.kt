@@ -130,7 +130,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_chat)
 
-        chatRoom = intent.getParcelableExtra("chatRoom") // 전달 받은 chatroom
+        val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom
+        chatRoom = db?.chatRoomDao()?.getRoom(chatRoomName)!!
 
         adapter = ChatAdapter(chatRoom.messageDatas, this)
         binding.recyclerView.layoutManager = LinearLayoutManager(applicationContext)

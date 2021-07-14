@@ -65,7 +65,7 @@ class ProfileActivity : AppCompatActivity() {
         binding.chatBtn.setOnClickListener {
             val chatRoom = createRoom()
             val intent = Intent(this, ChatActivity::class.java)
-            intent.putExtra("chatRoom", chatRoom)
+            intent.putExtra("chatRoom", chatRoom.roomName)
             startActivity(intent)
             finish()
         }
