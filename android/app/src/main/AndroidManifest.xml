@@ -22,14 +22,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeTalk"
         android:usesCleartextTraffic="true">
+        <receiver
+            android:name=".DirectReplyReceiver"
+            android:enabled="true"
+            android:exported="true"></receiver>
+
         <service
             android:name=".service.SocketReceiveService"
             android:enabled="true"
-            android:exported="true">
-        </service>
+            android:exported="true"></service>
 
-        <activity android:name=".ChatActivity"
-            android:parentActivityName=".HomeActivity"/>
+        <activity
+            android:name=".ChatActivity"
+            android:parentActivityName=".HomeActivity" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".ProfileMsgEditActivity" />
         <activity

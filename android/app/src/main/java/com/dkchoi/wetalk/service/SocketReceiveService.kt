@@ -12,9 +12,12 @@ import android.os.*
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
 import androidx.room.Room
 import com.dkchoi.wetalk.ChatActivity
+import com.dkchoi.wetalk.DirectReplyReceiver
+import com.dkchoi.wetalk.DirectReplyReceiver.Companion.KEY_TEXT_REPLY
 import com.dkchoi.wetalk.R
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
@@ -191,7 +194,6 @@ class SocketReceiveService : Service() {
     }
 
     fun showNotification(messageData: MessageData) {
-
         val channelId = "$packageName-${getString(R.string.app_name)}"
 
         val title = messageData.roomTitle
@@ -245,6 +247,7 @@ class SocketReceiveService : Service() {
             }
 
             chatIntent.putExtra("chatRoom", chatRoom)
+
             val pendingIntent: PendingIntent? =
                 TaskStackBuilder.create(this@SocketReceiveService).run {
                     // Add the intent, which inflates the back stack
@@ -254,6 +257,24 @@ class SocketReceiveService : Service() {
                 }
 
             builder.setContentIntent(pendingIntent)
+
+            val replyLabel: String = "답장"
+            val remoteInput: RemoteInput = RemoteInput.Builder(KEY_TEXT_REPLY).run {
+                setLabel(replyLabel)
+                build()
+            }
+
+            val replyIntent = Intent(applicationContext, DirectReplyReceiver::class.java)
+            replyIntent.putExtra("chatRoom", chatRoom)
+            val replyPendingIntent = PendingIntent.getBroadcast(applicationContext, 0, replyIntent, 0)
+
+            val action: NotificationCompat.Action =
+                NotificationCompat.Action.Builder(R.drawable.ic_baseline_reply_24,
+                    "REPLY", replyPendingIntent)
+                    .addRemoteInput(remoteInput)
+                    .build()
+
+            builder.addAction(action)
 
             with(NotificationManagerCompat.from(this@SocketReceiveService)) {
                 notify(notificationId, builder.build())
