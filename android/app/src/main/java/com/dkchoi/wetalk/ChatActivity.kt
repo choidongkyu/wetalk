@@ -9,7 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
@@ -132,6 +135,10 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
         val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom
         chatRoom = db?.chatRoomDao()?.getRoom(chatRoomName)!!
+
+        setSupportActionBar(binding.toolbar) // 툴바 생성
+        supportActionBar?.setDisplayHomeAsUpEnabled(true) //뒤로가기 생성
+        supportActionBar?.title = "채팅방"
 
         adapter = ChatAdapter(chatRoom.messageDatas, this)
         binding.recyclerView.layoutManager = LinearLayoutManager(applicationContext)
@@ -397,5 +404,24 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         binding.progressbar.visibility = View.VISIBLE
         saveBitmapToJpeg(bitmap)
         binding.progressbar.visibility = View.GONE
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        //return super.onCreateOptionsMenu(menu)
+        val menuInflater = menuInflater
+        menuInflater.inflate(R.menu.menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        //return super.onOptionsItemSelected(item)
+        when(item.itemId) {
+            R.id.action_settings -> {
+                Toast.makeText(this,"메뉴버튼 누름" ,Toast.LENGTH_SHORT).show()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
