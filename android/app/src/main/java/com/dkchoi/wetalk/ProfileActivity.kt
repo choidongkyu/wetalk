@@ -79,8 +79,10 @@ class ProfileActivity : AppCompatActivity() {
 
         if (chatRoom == null) { //기존에 존재하는 room이 없을경우 room 생성
             val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
-
-            chatRoom = ChatRoom(roomName, "${user.name},${Util.getMyName(this)}", "", imgPath, null)
+            val userList:MutableList<User> = mutableListOf<User>()
+            userList.add(Util.getMyUser(this))
+            userList.add(user)
+            chatRoom = ChatRoom(roomName, "${user.name},${Util.getMyName(this)}", "", imgPath, null, 0, userList)
             db?.chatRoomDao()?.insertChatRoom(chatRoom)
         }
 

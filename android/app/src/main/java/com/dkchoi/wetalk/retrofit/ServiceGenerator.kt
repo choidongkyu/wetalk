@@ -16,6 +16,6 @@ object ServiceGenerator {
     //user list를 받을 때 사용하는 retrofit 객체
     val retrofitUser: Retrofit = Retrofit.Builder()
         .baseUrl(BackendInterface.BASE_URL)
-        .addConverterFactory(MoshiConverterFactory.create())
+        .addConverterFactory(MoshiConverterFactory.create().asLenient())
         .build()
 }

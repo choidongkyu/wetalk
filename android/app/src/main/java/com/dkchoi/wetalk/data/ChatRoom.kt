@@ -1,5 +1,6 @@
 package com.dkchoi.wetalk.data
 import android.os.Parcelable
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
@@ -13,5 +14,6 @@ data class ChatRoom(
     var messageDatas: String, //채팅방에서 주고받은 대화들
     var chatProfileImg: String, // 채팅방 이미지
     var lastTime:String?,
-    var unReadCount:Int = 0
+    var unReadCount:Int = 0,
+    val userList: MutableList<User>
 ) : Parcelable

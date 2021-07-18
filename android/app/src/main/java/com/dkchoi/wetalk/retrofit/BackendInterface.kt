@@ -32,6 +32,11 @@ interface BackendInterface {
     @GET("user.php?request=getUserList")
     suspend fun getUserList(): List<User>
 
+    @GET("user.php?request=getUserListByIds")
+    suspend fun getUserListByIds(
+        @Query("ids[]") ids: List<String>
+    ): List<User>
+
     @GET("user.php?request=getUser")
     suspend fun getUser(
         @Query("phone") phone: String

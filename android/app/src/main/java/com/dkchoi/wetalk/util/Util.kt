@@ -190,6 +190,10 @@ class Util {
             }
         }
 
+        fun getUserIdsFromRoomName(roomName: String): List<String> { // roomName으로부터 user id를 파싱해주는 메소드
+            return roomName.split(",") //room name에 포함된 userid 파싱
+        }
+
         //내정보를 서버에서 갖고 오기 위한 메소드
         suspend fun fetchMyData(context: Context) {
             val server = ServiceGenerator.retrofitUser.create(BackendInterface::class.java)

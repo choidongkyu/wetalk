@@ -18,6 +18,8 @@ import com.dkchoi.wetalk.databinding.ActivityHomeBinding
 import com.dkchoi.wetalk.fragment.ChatRoomFragment
 import com.dkchoi.wetalk.fragment.HomeFragment
 import com.dkchoi.wetalk.fragment.ProfileFragment
+import com.dkchoi.wetalk.retrofit.BackendInterface
+import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
@@ -37,6 +39,10 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     private lateinit var profileFragment: ProfileFragment
 
     private val chatRoomViewModel: ChatRoomViewModel by viewModels()
+
+    private val server by lazy {
+        ServiceGenerator.retrofitUser.create(BackendInterface::class.java)
+    }
 
     companion object {
         var service: SocketReceiveService? = null
@@ -140,38 +146,35 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         //서스펜드 함수이므로 코루틴 내에서 실행
         lifecycleScope.launch(Dispatchers.Default) {
             if (chatRoomViewModel.getChatRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
-                var userId = ""
-                val users = messageData.roomName.split(",") //room name에 포함된 userid 파싱
-                for (user in users) {
-                    if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
-                        userId = user
-                        break
-                    }
-                }
-                val imgPath = "${Util.profileImgPath}/${userId}.jpg"
-                val chatRoom =
-                    ChatRoom(
-                        messageData.roomName,
-                        messageData.roomTitle,
-                        "$message|",
-                        imgPath,
-                        null,
-                        1
-                    ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
-
+                val ids: List<String> = Util.getUserIdsFromRoomName(messageData.roomName)
+                val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
+                val imgPath = getRoomImagePath(messageData.roomName)
+                val chatRoom = ChatRoom(messageData.roomName, messageData.roomTitle, "$message|", imgPath,
+                    null, 1, userList.toMutableList()) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
                 chatRoomViewModel.insertRoom(chatRoom)
             } else { //기존에 방이 존재한다면
                 val chatRoom = chatRoomViewModel.getChatRoom(messageData.roomName)
                 //chatroom에 메시지 추가
-                chatRoom.messageDatas =
-                    chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+                chatRoom.messageDatas = chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
                 chatRoom.unReadCount += 1
-
                 chatRoomViewModel.updateRoom(chatRoom)
             }
         }
         service?.showNotification(messageData) // 노티 띄워줌
+    }
+
+    private fun getRoomImagePath(roomName: String): String {
+        var userId = ""
+        val users = roomName.split(",") //room name에 포함된 userid 파싱
+        for (user in users) {
+            if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
+                userId = user
+                break
+            }
+        }
+        val imgPath = "${Util.profileImgPath}/${userId}.jpg"
+        return imgPath
     }
 }
 

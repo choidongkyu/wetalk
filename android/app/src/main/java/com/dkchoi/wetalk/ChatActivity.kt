@@ -3,6 +3,7 @@ package com.dkchoi.wetalk
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.ImageDecoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -12,17 +13,17 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.room.Room
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.signature.ObjectKey
+import androidx.recyclerview.widget.RecyclerView
 import com.dkchoi.wetalk.adapter.ChatAdapter
+import com.dkchoi.wetalk.adapter.RoomFriendListAdapter
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.databinding.ActivityChatBinding
 import com.dkchoi.wetalk.retrofit.BackendInterface
@@ -32,9 +33,11 @@ import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.JOIN_KEY
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_IP
 import com.dkchoi.wetalk.service.SocketReceiveService.Companion.SERVER_PORT
+import com.dkchoi.wetalk.util.RecyclerViewDecoration
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
 import com.dkchoi.wetalk.util.Util.Companion.getPhoneNumber
+import com.dkchoi.wetalk.util.Util.Companion.getUserIdsFromRoomName
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.toDate
 import kotlinx.coroutines.Dispatchers
@@ -55,11 +58,17 @@ import java.util.*
 
 class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener {
     private lateinit var binding: ActivityChatBinding
-    private lateinit var adapter: ChatAdapter
+    private lateinit var chatAdapter: ChatAdapter
+    private lateinit var roomFriendListAdapter: RoomFriendListAdapter
+    private lateinit var conversationRecyclerView: RecyclerView
     private lateinit var chatRoom: ChatRoom
 
     private val db: AppDatabase? by lazy {
         AppDatabase.getInstance(this, "chatRoom-database")
+    }
+
+    private val server by lazy {
+        ServiceGenerator.retrofitUser.create(BackendInterface::class.java)
     }
 
     //갤러리에서 사진 선택 후 불리는 result activity
@@ -91,8 +100,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                         System.currentTimeMillis().toDate(),
                         ViewType.RIGHT_IMAGE
                     )
-                    adapter.addItem(chatItem)
-                    binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+                    chatAdapter.addItem(chatItem)
+                    binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
                     binding.contentEdit.setText("")
                 } else {
                     clipData.let { clipData ->
@@ -119,8 +128,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                                 System.currentTimeMillis().toDate(),
                                 ViewType.RIGHT_IMAGE
                             )
-                            adapter.addItem(chatItem)
-                            binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+                            chatAdapter.addItem(chatItem)
+                            binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
                             binding.contentEdit.setText("")
                         }
                     }
@@ -136,27 +145,15 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom
         chatRoom = db?.chatRoomDao()?.getRoom(chatRoomName)!!
 
-        setSupportActionBar(binding.toolbar) // 툴바 생성
-        supportActionBar?.setDisplayHomeAsUpEnabled(true) //뒤로가기 생성
-        supportActionBar?.title = "채팅방"
-
-        adapter = ChatAdapter(chatRoom.messageDatas, this)
-        binding.recyclerView.layoutManager = LinearLayoutManager(applicationContext)
-        binding.recyclerView.adapter = adapter
-
-        binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+        toolBarSetting()
+        recyclerViewBinding()
 
         binding.sendBtn.setOnClickListener {
             sendMessage(binding.contentEdit.text.toString())
-            val chatItem = ChatItem(
-                "",
-                "",
-                binding.contentEdit.text.toString(),
-                System.currentTimeMillis().toDate(),
-                ViewType.RIGHT_MESSAGE
-            )
-            adapter.addItem(chatItem)
-            binding.recyclerView.scrollToPosition(adapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+            val chatItem = ChatItem("", "", binding.contentEdit.text.toString(),
+                System.currentTimeMillis().toDate(), ViewType.RIGHT_MESSAGE)
+            chatAdapter.addItem(chatItem)
+            binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
             binding.contentEdit.setText("")
         }
 
@@ -171,6 +168,13 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         with(NotificationManagerCompat.from(this)) { // 채팅방 들어갈때 notification 메시지 삭제
             cancel(1002)
         }
+    }
+
+    private fun toolBarSetting() {
+        setSupportActionBar(binding.toolbar) // 툴바 생성
+        supportActionBar?.setDisplayHomeAsUpEnabled(true) //뒤로가기 생성
+        supportActionBar?.title = "채팅방"
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
     }
 
     override fun onResume() {
@@ -260,7 +264,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             var message = msg.replace("\r\n", "")
             if (message.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
                 message = message.replace(JOIN_KEY, "") // 조인키 삭제
-                adapter.addItem(
+                chatAdapter.addItem(
                     ChatItem(
                         "",
                         "",
@@ -269,7 +273,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                         ViewType.CENTER_MESSAGE
                     )
                 )
-                binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
+                binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
             } else {
                 saveMsgToLocalDB(message)
             }
@@ -279,27 +283,13 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     //상대방이 메시지 보낼 경우
     private fun addChat(messageData: MessageData) {
         if (messageData.type == MessageType.TEXT_MESSAGE) {
-            adapter.addItem(
-                ChatItem(
-                    messageData.name,
-                    messageData.id,
-                    messageData.content,
-                    messageData.sendTime.toDate(),
-                    ViewType.LEFT_MESSAGE
-                )
-            )
-            binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
+            chatAdapter.addItem(ChatItem(messageData.name, messageData.id, messageData.content,
+                messageData.sendTime.toDate(), ViewType.LEFT_MESSAGE))
+            binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
         } else {
-            adapter.addItem(
-                ChatItem(
-                    messageData.name,
-                    messageData.id,
-                    messageData.content,
-                    messageData.sendTime.toDate(),
-                    ViewType.LEFT_IMAGE
-                )
-            )
-            binding.recyclerView.scrollToPosition(adapter.itemCount - 1)
+            chatAdapter.addItem(ChatItem(messageData.name, messageData.id, messageData.content,
+                messageData.sendTime.toDate(), ViewType.LEFT_IMAGE))
+            binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
         }
     }
 
@@ -307,28 +297,13 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
         if (messageData.name.equals(getMyName(this))) return // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
         lifecycleScope.launch(Dispatchers.Default) {
-            if (db?.chatRoomDao()
-                    ?.getRoom(messageData.roomName) == null
-            ) { // 로컬 db에 존재하는 방이 없다면
-                var userId = ""
-                val users = messageData.roomName.split(",") //room name에 포함된 userid 파싱
-                for (user in users) {
-                    if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
-                        userId = user
-                        break
-                    }
-                }
-                val imgPath = "${Util.profileImgPath}/${userId}.jpg"
+            if (db?.chatRoomDao()?.getRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
+                val ids: List<String> = getUserIdsFromRoomName(messageData.roomName)
+                val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
+                val imgPath = getRoomImagePath(messageData.roomName)
                 val chatRoom =
-                    ChatRoom(
-                        messageData.roomName,
-                        messageData.roomTitle,
-                        "$message|",
-                        imgPath,
-                        null
-                    ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
-
-
+                    ChatRoom(messageData.roomName, messageData.roomTitle, "$message|",
+                        imgPath, null, 1, userList.toMutableList()) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
                 db?.chatRoomDao()?.insertChatRoom(chatRoom)
             } else { //기존에 방이 존재한다면
                 val chatRoom = db?.chatRoomDao()?.getRoom(messageData.roomName)
@@ -371,9 +346,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             override fun onFailure(call: Call<Int>, t: Throwable) {
                 Log.d("test11", "업로드 실패 - ${t.printStackTrace()}")
             }
-
         })
-
     }
 
     private fun saveBitmapToJpeg(bitmap: Bitmap) {
@@ -418,10 +391,39 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         //return super.onOptionsItemSelected(item)
         when(item.itemId) {
             R.id.action_settings -> {
-                Toast.makeText(this,"메뉴버튼 누름" ,Toast.LENGTH_SHORT).show()
+                binding.drawerLayout.openDrawer(GravityCompat.END)
                 return true
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun getRoomImagePath(roomName: String): String {
+        var userId = ""
+        val users = roomName.split(",") //room name에 포함된 userid 파싱
+        for (user in users) {
+            if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
+                userId = user
+                break
+            }
+        }
+        val imgPath = "${Util.profileImgPath}/${userId}.jpg"
+        return imgPath
+    }
+
+    private fun recyclerViewBinding() {
+        // 채팅 리스트
+        chatAdapter = ChatAdapter(chatRoom.messageDatas, this)
+        binding.chatRecyclerView.layoutManager = LinearLayoutManager(applicationContext)
+        binding.chatRecyclerView.adapter = chatAdapter
+        binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1) // 리스트의 마지막으로 포커스 가도록 함
+
+        //대화상대 리스트
+        roomFriendListAdapter = RoomFriendListAdapter(chatRoom.userList)
+        val headerView = binding.navView.getHeaderView(0)
+        conversationRecyclerView = headerView.findViewById(R.id.conversation_recyclerView)
+        conversationRecyclerView.layoutManager = LinearLayoutManager(applicationContext)
+        conversationRecyclerView.adapter = roomFriendListAdapter
+        conversationRecyclerView.addItemDecoration(RecyclerViewDecoration(40)) // 아이템간 간격 설정
     }
 }

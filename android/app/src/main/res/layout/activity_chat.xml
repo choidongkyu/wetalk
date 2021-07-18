@@ -7,8 +7,7 @@
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        tools:openDrawer="end">
+        android:fitsSystemWindows="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -24,7 +23,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
+                android:id="@+id/chatRecyclerView"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:paddingBottom="60dp"
@@ -107,8 +106,8 @@
             android:id="@+id/nav_view"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            app:headerLayout="@layout/nav_header_main"
             android:layout_gravity="end"
-            android:fitsSystemWindows="true"
-            app:menu="@menu/menu" />
+            android:fitsSystemWindows="true" />
     </androidx.drawerlayout.widget.DrawerLayout>
 </layout>
