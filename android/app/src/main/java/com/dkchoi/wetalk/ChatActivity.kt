@@ -148,6 +148,29 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         toolBarSetting()
         recyclerViewBinding()
 
+        roomFriendListAdapter.setOnItemClickListener(object : RoomFriendListAdapter.OnItemClickEventListener {
+            override fun onItemClick(view: View, pos: Int) {
+                val friendList = roomFriendListAdapter.getList()
+                val user: User = friendList[pos]
+
+                if(user.id == getPhoneNumber(this@ChatActivity)) {
+                    return
+                }
+
+                if(pos == 0) {
+                    val intent = Intent(this@ChatActivity, InviteActivity::class.java)
+                    intent.putExtra("chatRoom", chatRoom.roomName)
+                    startActivity(intent)
+                    return
+                }
+
+                val intent = Intent(this@ChatActivity, ProfileActivity::class.java)
+                intent.putExtra("user", user)
+                startActivity(intent)
+            }
+
+        })
+
         binding.sendBtn.setOnClickListener {
             sendMessage(binding.contentEdit.text.toString())
             val chatItem = ChatItem("", "", binding.contentEdit.text.toString(),

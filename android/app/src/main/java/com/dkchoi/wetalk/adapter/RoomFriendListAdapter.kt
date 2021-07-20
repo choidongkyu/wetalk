@@ -24,11 +24,20 @@ import com.dkchoi.wetalk.util.Util
 class RoomFriendListAdapter(private val userList: MutableList<User>) : RecyclerView.Adapter<RoomFriendListAdapter.ViewHolder>() {
     private lateinit var context: Context
     private val friendList: MutableList<User> = mutableListOf<User>()
+    private var itemClickListener: OnItemClickEventListener? = null
 
     init {
         val inviteUser = User("0", null, null, "대화상대 초대") // 대화상대 초대 위한 dummy data
         friendList.add(inviteUser)
         friendList.addAll(userList)
+    }
+
+    interface OnItemClickEventListener {
+        fun onItemClick(view: View, pos: Int)
+    }
+
+    fun setOnItemClickListener(listener: OnItemClickEventListener) {
+        this.itemClickListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -75,26 +84,18 @@ class RoomFriendListAdapter(private val userList: MutableList<User>) : RecyclerV
         return friendList.size
     }
 
+    fun getList(): MutableList<User> {
+        return friendList
+    }
+
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val friendName: TextView = itemView.findViewById(R.id.friend_name)
         val friendImg: ImageView = itemView.findViewById(R.id.friend_image)
 
         init {
             itemView.setOnClickListener {
-                val user: User = friendList[adapterPosition]
-                if(user.id == Util.getPhoneNumber(context)) {
-                    return@setOnClickListener
-                }
-
-                if(adapterPosition == 0) {
-                    val intent = Intent(context, InviteActivity::class.java)
-                    context.startActivity(intent)
-                    return@setOnClickListener
-                }
-
-                val intent = Intent(context, ProfileActivity::class.java)
-                intent.putExtra("user", user)
-                context.startActivity(intent)
+                itemClickListener?.onItemClick(it, adapterPosition)
+                return@setOnClickListener
             }
         }
     }
