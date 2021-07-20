@@ -12,6 +12,9 @@ interface UserDao {
     @Query("SELECT * FROM User")
     fun getAll(): LiveData<List<User>>;
 
+    @Query("SELECT * FROM User")
+    fun getList(): List<User>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE) // primarykey가 중복되면 덮어씀
     fun insertAll(vararg users: User)
 }

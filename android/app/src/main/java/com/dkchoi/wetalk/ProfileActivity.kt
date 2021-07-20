@@ -66,6 +66,7 @@ class ProfileActivity : AppCompatActivity() {
             val chatRoom = createRoom()
             val intent = Intent(this, ChatActivity::class.java)
             intent.putExtra("chatRoom", chatRoom.roomName)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
             finish()
         }

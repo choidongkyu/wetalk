@@ -22,15 +22,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeTalk"
         android:usesCleartextTraffic="true">
+        <activity android:name=".InviteActivity"></activity>
+
         <receiver
             android:name=".DirectReplyReceiver"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true" />
 
         <service
             android:name=".service.SocketReceiveService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
 
         <activity
             android:name=".ChatActivity"
