@@ -2,6 +2,7 @@ package com.dkchoi.wetalk
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -20,11 +21,12 @@ class InviteActivity : AppCompatActivity() {
         AppDatabase.getInstance(this, "user-database")
     }
 
+    lateinit var binding: ActivityInviteBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_invite)
-        val binding: ActivityInviteBinding =
-            DataBindingUtil.setContentView(this, R.layout.activity_invite)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_invite)
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -42,11 +44,14 @@ class InviteActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_confirm -> {
-                Toast.makeText(this, "확인 버튼 누름", Toast.LENGTH_SHORT).show()
+                val list = (binding.recyclerView.adapter as InviteFriendListAdapter).getCheckedList()
+                for(value in list) {
+                    Log.d("test11", "${value.name}")
+                }
                 return true
             }
             android.R.id.home -> {
-                finish()
+                finish()receivethread == null and make thread
                 return true
             }
         }

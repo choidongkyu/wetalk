@@ -24,6 +24,9 @@ class InviteFriendListAdapter(private val friendList: List<User>) :
     RecyclerView.Adapter<InviteFriendListAdapter.ViewHolder>() {
 
     private lateinit var context: Context
+    private val checkedList: MutableList<User> = mutableListOf()
+
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         context = parent.context
@@ -54,9 +57,24 @@ class InviteFriendListAdapter(private val friendList: List<User>) :
         return friendList.size
     }
 
+    fun getCheckedList(): MutableList<User> {
+        return checkedList
+    }
+
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val friendName: TextView = itemView.findViewById(R.id.friend_name)
         val friendImg: ImageView = itemView.findViewById(R.id.friend_image)
         val checkBox: CheckBox = itemView.findViewById(R.id.chkSelected)
+
+        init {
+            itemView.setOnClickListener {
+                checkBox.isChecked = !checkBox.isChecked
+                if(checkBox.isChecked) {
+                    checkedList.add(friendList[adapterPosition])
+                } else {
+                    checkedList.remove(friendList[adapterPosition])
+                }
+            }
+        }
     }
 }
