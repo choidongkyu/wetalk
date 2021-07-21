@@ -22,6 +22,7 @@ import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.Dispatchers
@@ -148,7 +149,7 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             if (chatRoomViewModel.getChatRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
                 val ids: List<String> = Util.getUserIdsFromRoomName(messageData.roomName)
                 val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
-                val imgPath = getRoomImagePath(messageData.roomName)
+                val imgPath = getRoomImagePath(messageData.roomName, applicationContext)
                 val chatRoom = ChatRoom(messageData.roomName, messageData.roomTitle, "$message|", imgPath,
                     null, 1, userList.toMutableList()) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
@@ -161,20 +162,7 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                 chatRoomViewModel.updateRoom(chatRoom)
             }
         }
-        service?.showNotification(messageData) // 노티 띄워줌
-    }
-
-    private fun getRoomImagePath(roomName: String): String {
-        var userId = ""
-        val users = roomName.split(",") //room name에 포함된 userid 파싱
-        for (user in users) {
-            if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
-                userId = user
-                break
-            }
-        }
-        val imgPath = "${Util.profileImgPath}/${userId}.jpg"
-        return imgPath
+        service?.showNotification(message) // 노티 띄워줌
     }
 }
 

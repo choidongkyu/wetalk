@@ -26,7 +26,9 @@ import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
 import com.dkchoi.wetalk.util.Util.Companion.getUserIdsFromRoomName
+import com.dkchoi.wetalk.util.Util.Companion.saveMsgToLocalRoom
 import kotlinx.coroutines.*
 import java.io.*
 import java.lang.Runnable
@@ -119,7 +121,7 @@ class SocketReceiveService : Service() {
                     if (listener != null) {
                         listener!!.onReceive(it) //listener이 null이 아닌경우 app이 현재 화면에 띄워진 상태이므로 콜백 불러줌
                     } else {
-                        saveMsgToLocalDB(it) // 앱이 백그라운드에 있으므로 단순 db저장
+                        onReceive(it) // 앱이 백그라운드에 있으므로 단순 db저장
                     }
 
                 }
@@ -140,39 +142,17 @@ class SocketReceiveService : Service() {
         }
     }
 
-    private fun saveMsgToLocalDB(message: String) {
-        val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
-        if (messageData.name.equals(user.name)) return // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
-        CoroutineScope(Dispatchers.IO).launch {
-            if (db?.chatRoomDao()?.getRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
-                val ids: List<String> = getUserIdsFromRoomName(messageData.roomName)
-                val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
-                val imgPath = getRoomImagePath(messageData.roomName)
-                val chatRoom =
-                    ChatRoom(
-                        messageData.roomName,
-                        messageData.roomTitle,
-                        "$message|",
-                        imgPath,
-                        null,
-                        1,
-                        userList.toMutableList()
-                    ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
+    private fun onReceive(message: String) {
+        db?.let {
+            CoroutineScope(Dispatchers.IO).launch {
+                val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
 
-                db?.chatRoomDao()?.insertChatRoom(chatRoom)
-            } else { //기존에 방이 존재한다면
-                val chatRoom = db?.chatRoomDao()?.getRoom(messageData.roomName)
-                //chatroom에 메시지 추가
-                chatRoom?.let {
-                    chatRoom.messageDatas =
-                        chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+                if (messageData.name == Util.getMyName(applicationContext)) return@launch // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
 
-                    chatRoom.unReadCount += 1
-                    db?.chatRoomDao()?.updateChatRoom(it)
-                }
+                saveMsgToLocalRoom(message, it, applicationContext)
+                showNotification(message)
             }
         }
-        showNotification(messageData)
     }
 
     private fun createNotificationChannel() {
@@ -191,7 +171,8 @@ class SocketReceiveService : Service() {
         }
     }
 
-    fun showNotification(messageData: MessageData) {
+    fun showNotification(message: String) {
+        val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
         val channelId = "$packageName-${getString(R.string.app_name)}"
 
         val roomTitle = getRoomTitle(messageData.roomTitle) // 알림제목으로 설정될 방제목 get
@@ -273,19 +254,6 @@ class SocketReceiveService : Service() {
             // Get the PendingIntent containing the entire back stack
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
         }
-    }
-
-    private fun getRoomImagePath(roomName: String): String {
-        var userId = ""
-        val users = roomName.split(",") //room name에 포함된 userid 파싱
-        for (user in users) {
-            if (user != Util.getPhoneNumber(applicationContext)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
-                userId = user
-                break
-            }
-        }
-        val imgPath = "${Util.profileImgPath}/${userId}.jpg"
-        return imgPath
     }
 
     private fun getReplyAction(chatRoom: ChatRoom?): NotificationCompat.Action {

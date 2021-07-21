@@ -16,19 +16,26 @@ import android.util.Base64
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.dkchoi.wetalk.data.ChatRoom
+import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.PhoneBook
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
 class Util {
     companion object {
+        private val server = ServiceGenerator.retrofitUser.create(BackendInterface::class.java)
 
         val gson = Gson()
 
@@ -113,7 +120,12 @@ class Util {
         }
 
         fun getMyUser(context: Context): User {
-            return User(getPhoneNumber(context), getMyImg(context), getMyStatusMsg(context), getMyName(context)!!)
+            return User(
+                getPhoneNumber(context),
+                getMyImg(context),
+                getMyStatusMsg(context),
+                getMyName(context)!!
+            )
         }
 
         fun setMyImg(msg: String, context: Context) {
@@ -245,6 +257,47 @@ class Util {
         @SuppressLint("SimpleDateFormat")
         fun Long.toDate(): String {
             return SimpleDateFormat("hh:mm a").format(Date(this))
+        }
+
+        fun getRoomImagePath(roomName: String, context: Context): String {
+            var userId = ""
+            val users = roomName.split(",") //room name에 포함된 userid 파싱
+            for (user in users) {
+                if (user != Util.getPhoneNumber(context)) {//자신이 아닌 다른 user의 프로필 사진으로 채팅방 구성
+                    userId = user
+                    break
+                }
+            }
+            val imgPath = "${Util.profileImgPath}/${userId}.jpg"
+            return imgPath
+        }
+
+
+        //소켓으로 부터 들어온 메시지를 Room에 저장하는 메소드
+        suspend fun saveMsgToLocalRoom(message: String, db: AppDatabase, context: Context) {
+            val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+            if (db.chatRoomDao()?.getRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
+                val ids: List<String> = getUserIdsFromRoomName(messageData.roomName)
+                val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
+                val imgPath = getRoomImagePath(messageData.roomName, context)
+                val chatRoom =
+                    ChatRoom(
+                        messageData.roomName, messageData.roomTitle, "$message|",
+                        imgPath, null, 1, userList.toMutableList()
+                    ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
+                db.chatRoomDao().insertChatRoom(chatRoom)
+            } else { //기존에 방이 존재한다면
+                val chatRoom = db.chatRoomDao().getRoom(messageData.roomName)
+                //chatroom에 메시지 추가
+                chatRoom.messageDatas =
+                    chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+
+                chatRoom.let {
+                    chatRoom.unReadCount += 1
+                    db.chatRoomDao().updateChatRoom(it)
+                }
+            }
+
         }
     }
 }
