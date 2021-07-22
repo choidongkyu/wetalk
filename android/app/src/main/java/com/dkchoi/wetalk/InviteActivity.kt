@@ -58,6 +58,7 @@ class InviteActivity : AppCompatActivity() {
             R.id.action_confirm -> {
                 val list = (binding.recyclerView.adapter as InviteFriendListAdapter).getCheckedList()
                 chatRoom.userList.addAll(list)
+                chatRoom.updateRoomInfo()
                 chatRoomDb?.chatRoomDao()?.updateChatRoom(chatRoom)
                 val intent = Intent(this, ChatActivity::class.java)
                 intent.putExtra("chatRoom", chatRoom.roomName)

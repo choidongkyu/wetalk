@@ -21,4 +21,8 @@ class ExampleInstrumentedTest {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.dkchoi.wetalk", appContext.packageName)
     }
+
+    @Test
+    fun getUsers() {
+    }
 }

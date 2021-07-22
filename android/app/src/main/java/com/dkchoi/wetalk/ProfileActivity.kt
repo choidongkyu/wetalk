@@ -83,7 +83,7 @@ class ProfileActivity : AppCompatActivity() {
             val userList:MutableList<User> = mutableListOf<User>()
             userList.add(Util.getMyUser(this))
             userList.add(user)
-            chatRoom = ChatRoom(roomName, "${user.name},${Util.getMyName(this)}", "", imgPath, null, 0, userList)
+            chatRoom = ChatRoom("", imgPath, null, 0, userList)
             db?.chatRoomDao()?.insertChatRoom(chatRoom)
         }
 
