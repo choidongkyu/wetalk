@@ -210,10 +210,6 @@ class Util {
         suspend fun fetchMyData(context: Context) {
             val server = ServiceGenerator.retrofitUser.create(BackendInterface::class.java)
             val user = server.getUser(getPhoneNumber(context))
-            Log.d(
-                "test11",
-                "name = ${user.name}, 상태 = ${user.profileText}, 이미지 = ${user.profileImage}"
-            )
             if (user.profileImage != null) {
                 setMyImg(user.profileImage!!, context)
             } else {

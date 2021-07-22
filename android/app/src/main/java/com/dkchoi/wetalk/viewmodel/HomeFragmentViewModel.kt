@@ -30,7 +30,6 @@ class HomeFragmentViewModel(application: Application) : AndroidViewModel(applica
 
         //서버에서 받아온 user 리스트와 전화번호부 비교하여 친구리스트 생성
         for (user in userList) {
-            Log.d("test11", "${user.profileImage}")
             for (phoneBook in phoneBooks) {
                 var result = phoneBook.tel?.replace("-", "") // '-' 제거
                 result = result?.replaceFirst("0", "+82")

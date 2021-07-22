@@ -359,22 +359,17 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         server.uploadImage(requestFile, name, roomName).enqueue(object : Callback<Int> {
             override fun onResponse(call: Call<Int>, response: Response<Int>) {
                 if (response.body() == 200) {
-                    Log.d("test11", "업로드 성공")
                     sendImage(content)
                 } else {
-                    Log.d("test11", "업로드 실패 result = ${response.body()}")
                 }
             }
 
             override fun onFailure(call: Call<Int>, t: Throwable) {
-                Log.d("test11", "업로드 실패 - ${t.printStackTrace()}")
             }
         })
     }
 
     private fun saveBitmapToJpeg(bitmap: Bitmap) {
-        Log.d("test11", "saveBitmaptoJpeg called")
-
         //내부 저장소 캐쉬 경로 받아옴
         val storage: File = cacheDir
 
@@ -396,7 +391,6 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     }
 
     private fun uploadUriImage(bitmap: Bitmap) { //uri 이미지를 서버에 전송
-        Log.d("test11", "uploadUriImage called")
         binding.progressbar.visibility = View.VISIBLE
         saveBitmapToJpeg(bitmap)
         binding.progressbar.visibility = View.GONE

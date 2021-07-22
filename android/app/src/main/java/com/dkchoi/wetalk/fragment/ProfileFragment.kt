@@ -34,6 +34,7 @@ import java.io.FileOutputStream
 
 
 class ProfileFragment : Fragment() {
+    private val TAG: String = javaClass.simpleName
     private lateinit var binding: FragmentProfileBinding
 
     private val requestMultiplePermissions =
@@ -144,8 +145,6 @@ class ProfileFragment : Fragment() {
     }
 
     private suspend fun saveBitmapToJpeg(bitmap: Bitmap, name: String) {
-        Log.d("test11", "saveBitmaptoJpeg called")
-
         //내부 저장소 캐쉬 경로 받아옴
         val storage: File? = activity?.cacheDir
         //저장할 파일 이름
@@ -164,7 +163,6 @@ class ProfileFragment : Fragment() {
     }
 
     private fun processTheImage(bitmap: Bitmap, name: String) {
-        Log.d("test11", "processTheImage called")
         lifecycleScope.launch {
             binding.progressbar.visibility = View.VISIBLE
             saveBitmapToJpeg(bitmap, name)
@@ -194,9 +192,9 @@ class ProfileFragment : Fragment() {
 
         val result = server.uploadFile(requestFile, name)
         if (result == 200) {
-            Log.d("test11", "업로드 성공")
+            Log.d(TAG, "업로드 성공")
         } else {
-            Log.d("test11", "업로드 실패 result = $result")
+            Log.d(TAG, "업로드 실패 result = $result")
         }
 
     }

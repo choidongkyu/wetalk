@@ -70,7 +70,6 @@ class ChatRoomFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("test11", "chatroom fragment destroy called")
     }
 
     private fun showDialog(position: Int) {

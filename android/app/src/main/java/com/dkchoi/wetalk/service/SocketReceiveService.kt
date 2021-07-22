@@ -64,11 +64,9 @@ class SocketReceiveService : Service() {
     }
 
     override fun onCreate() {
-        Log.d("test11", "service onCreate ")
         serviceHandler = Handler() // queing 동작을 하기 위한 핸들러 생성
         user = Util.getMyUser(this)
         if (receiveThread == null) {
-            Log.d("test11", "receivethread == null and make thread")
             receiveThread = MainReceiveThread()
         }
         createNotificationChannel()
@@ -85,7 +83,6 @@ class SocketReceiveService : Service() {
     }
 
     override fun onDestroy() {
-        Log.d("test11", "service onDestroy called ")
         receiveThread?.stopThread()
     }
 
@@ -109,7 +106,6 @@ class SocketReceiveService : Service() {
                 OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
                 true
             )
-            Log.d("test11", "thread start")
             val request = "join::${user.name}::${user.id}\r\n"
             pw.println(request)
 
@@ -129,7 +125,6 @@ class SocketReceiveService : Service() {
         }
 
         fun stopThread() {
-            Log.d("test11", "stopThread called")
             running = false
             Thread(Runnable {
                 val pw = PrintWriter(
