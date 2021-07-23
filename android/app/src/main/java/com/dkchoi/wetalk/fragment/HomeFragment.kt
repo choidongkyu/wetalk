@@ -44,7 +44,6 @@ class HomeFragment : Fragment() {
             layoutManager = LinearLayoutManager(activity)
         }
 
-
         homeFragmentViewModel.apply {
             getUserList().observe(viewLifecycleOwner, Observer {
                 friendListAdapter.updateItem(it)

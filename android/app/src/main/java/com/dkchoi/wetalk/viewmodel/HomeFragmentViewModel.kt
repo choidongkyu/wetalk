@@ -14,6 +14,7 @@ import com.dkchoi.wetalk.util.Util
 class HomeFragmentViewModel(application: Application) : AndroidViewModel(application) {
     val db = AppDatabase.getInstance(application, "user-database")
 
+
     fun getUserList(): LiveData<List<User>> {
         return db!!.userDao().getAll()
     }

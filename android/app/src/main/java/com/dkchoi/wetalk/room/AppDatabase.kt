@@ -15,6 +15,7 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         private var chatRoomInstance: AppDatabase? = null
         private var userInstance: AppDatabase? = null
+
         fun getInstance(context: Context, db: String): AppDatabase? {
             if(db == "user-database") {
                 if (userInstance == null) {
