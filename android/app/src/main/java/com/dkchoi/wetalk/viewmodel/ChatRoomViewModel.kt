@@ -3,7 +3,6 @@ package com.dkchoi.wetalk.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.room.Room
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.room.AppDatabase
 
@@ -16,7 +15,7 @@ class ChatRoomViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun getChatRoom(name: String): ChatRoom {
-        return db!!.chatRoomDao().getRoom(name)
+        return db!!.chatRoomDao().getRoomFromName(name)
     }
 
     suspend fun insertRoom(chatRoom: ChatRoom) {

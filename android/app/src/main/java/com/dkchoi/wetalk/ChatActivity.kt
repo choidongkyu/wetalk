@@ -3,7 +3,6 @@ package com.dkchoi.wetalk
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.ImageDecoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +12,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.GravityCompat
@@ -37,8 +35,6 @@ import com.dkchoi.wetalk.util.RecyclerViewDecoration
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getMyName
 import com.dkchoi.wetalk.util.Util.Companion.getPhoneNumber
-import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
-import com.dkchoi.wetalk.util.Util.Companion.getUserIdsFromRoomName
 import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.saveMsgToLocalRoom
 import com.dkchoi.wetalk.util.Util.Companion.toDate
@@ -145,7 +141,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_chat)
 
         val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom
-        chatRoom = db?.chatRoomDao()?.getRoom(chatRoomName)!!
+        chatRoom = db?.chatRoomDao()?.getRoomFromName(chatRoomName)!!
 
         toolBarSetting()
         recyclerViewBinding()
@@ -208,8 +204,12 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     override fun onResume() {
         super.onResume()
         HomeActivity.service?.registerListener(this@ChatActivity)
-        chatRoom.unReadCount = 0
-        db?.chatRoomDao()?.updateChatRoom(chatRoom)
+        db?.let { db ->
+            chatRoom = db.chatRoomDao().getRoomFromId(chatRoom.roomId)
+            chatRoom.unReadCount = 0
+            db.chatRoomDao().updateChatRoom(chatRoom)
+        }
+        (conversationRecyclerView.adapter as RoomFriendListAdapter).updateList(chatRoom.userList) // 친구 리스트 업데이트
     }
 
     override fun onPause() {
@@ -292,16 +292,10 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             var message = msg.replace("\r\n", "")
             if (message.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
                 message = message.replace(JOIN_KEY, "") // 조인키 삭제
-                chatAdapter.addItem(
-                    ChatItem(
-                        "",
-                        "",
-                        message,
-                        "",
-                        ViewType.CENTER_MESSAGE
-                    )
-                )
-                binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
+                val tokens = message.split("::") // :: 기준으로 tokens[0]는 메시지, tokens[1]는 user 정보
+                val user = gson.fromJson(tokens[1], User::class.java)
+                addUser(user)
+                addCenterChat(tokens[0])
             } else {
                 val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
                 db?.let { db ->
@@ -341,6 +335,19 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         }
     }
 
+    private fun addCenterChat(messageData: String) { //입장 및 퇴장시 추가되는 center 메시지
+        chatAdapter.addItem(
+            ChatItem(
+                "",
+                "",
+                messageData,
+                "",
+                ViewType.CENTER_MESSAGE
+            )
+        )
+        binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
+    }
+
 
     private fun uploadImage(path: String) {
         val file = File(path)
@@ -360,11 +367,11 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             override fun onResponse(call: Call<Int>, response: Response<Int>) {
                 if (response.body() == 200) {
                     sendImage(content)
-                } else {
                 }
             }
 
             override fun onFailure(call: Call<Int>, t: Throwable) {
+                //nothing...
             }
         })
     }
@@ -429,5 +436,14 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         conversationRecyclerView.layoutManager = LinearLayoutManager(applicationContext)
         conversationRecyclerView.adapter = roomFriendListAdapter
         conversationRecyclerView.addItemDecoration(RecyclerViewDecoration(40)) // 아이템간 간격 설정
+    }
+
+    private fun addUser(user: User) {
+        db?.let { db ->
+            chatRoom.userList.add(user)
+            db.chatRoomDao().updateChatRoom(chatRoom)
+            (conversationRecyclerView.adapter as RoomFriendListAdapter).updateList(chatRoom.userList) // 친구 리스트 업데이트
+            chatRoom.updateRoomInfo()
+        }
     }
 }

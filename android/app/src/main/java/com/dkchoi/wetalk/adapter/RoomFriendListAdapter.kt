@@ -27,8 +27,8 @@ class RoomFriendListAdapter(private val userList: MutableList<User>) : RecyclerV
     private var itemClickListener: OnItemClickEventListener? = null
 
     init {
-        val inviteUser = User("0", null, null, "대화상대 초대") // 대화상대 초대 위한 dummy data
-        friendList.add(inviteUser)
+        val inviteString = User("0", null, null, "대화상대 초대") // 대화상대 초대 위한 dummy data
+        friendList.add(inviteString)
         friendList.addAll(userList)
     }
 
@@ -86,6 +86,14 @@ class RoomFriendListAdapter(private val userList: MutableList<User>) : RecyclerV
 
     fun getList(): MutableList<User> {
         return friendList
+    }
+
+    fun updateList(userList: MutableList<User>) {
+        friendList.clear()
+        val inviteString = User("0", null, null, "대화상대 초대") // 대화상대 초대 위한 dummy data
+        friendList.add(inviteString)
+        friendList.addAll(userList)
+        notifyDataSetChanged()
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

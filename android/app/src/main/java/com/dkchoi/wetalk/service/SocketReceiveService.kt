@@ -9,7 +9,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.*
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
@@ -26,8 +25,6 @@ import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
-import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
-import com.dkchoi.wetalk.util.Util.Companion.getUserIdsFromRoomName
 import com.dkchoi.wetalk.util.Util.Companion.saveMsgToLocalRoom
 import kotlinx.coroutines.*
 import java.io.*
@@ -140,10 +137,17 @@ class SocketReceiveService : Service() {
     private fun onReceive(message: String) {
         db?.let {
             CoroutineScope(Dispatchers.IO).launch {
+                var msg = message.replace("\r\n", "")
+                if (msg.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
+                    msg = msg.replace(JOIN_KEY, "") // 조인키 삭제
+                    val tokens = msg.split("::") // :: 기준으로 tokens[0]는 메시지, tokens[1]는 user 정보
+                    val user = Util.gson.fromJson(tokens[1], User::class.java)
+
+                    addCenterChat(tokens[0])
+                }
+
                 val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
-
                 if (messageData.name == Util.getMyName(applicationContext)) return@launch // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
-
                 saveMsgToLocalRoom(message, it, applicationContext)
                 showNotification(message)
             }
@@ -192,10 +196,7 @@ class SocketReceiveService : Service() {
             }
 
 
-            val chatRoom = withContext(Dispatchers.Default) { // db에서 chatroom 가져옴
-                db?.chatRoomDao()?.getRoom(messageData.roomName)
-            }
-
+            val chatRoom = db?.chatRoomDao()?.getRoomFromName(messageData.roomName)
             val pendingIntent =
                 getContentIntent(chatRoom) //notification 클릭시 액티비티로 이동할수 있도록 intent 생성
             builder.setContentIntent(pendingIntent)
@@ -259,7 +260,7 @@ class SocketReceiveService : Service() {
         }
 
         val replyIntent = Intent(applicationContext, DirectReplyReceiver::class.java)
-        replyIntent.putExtra("chatRoom", chatRoom)
+        replyIntent.putExtra("chatRoom", chatRoom?.roomName)
         val replyPendingIntent = PendingIntent.getBroadcast(
             applicationContext,
             0,

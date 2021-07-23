@@ -4,19 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
-import androidx.lifecycle.lifecycleScope
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.MessageType
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.Util
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
@@ -36,7 +31,10 @@ class DirectReplyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         this.context = context
         val remoteInput: Bundle? = RemoteInput.getResultsFromIntent(intent)
-        chatRoom = intent.getParcelableExtra("chatRoom") // 전달 받은 chatroom
+        val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom name
+        db?.let { db ->
+            chatRoom = db.chatRoomDao().getRoomFromName(chatRoomName)
+        }
         remoteInput?.let {
             val replyText = remoteInput.getCharSequence(KEY_TEXT_REPLY)
             sendMessage(replyText.toString())
@@ -47,7 +45,6 @@ class DirectReplyReceiver : BroadcastReceiver() {
     }
 
     private fun sendMessage(request: String) {
-
         val messageData: MessageData = MessageData(
             MessageType.TEXT_MESSAGE,
             Util.getMyName(context)!!,
@@ -78,6 +75,5 @@ class DirectReplyReceiver : BroadcastReceiver() {
             )
             pw.println(message)
         }).start()
-
     }
 }

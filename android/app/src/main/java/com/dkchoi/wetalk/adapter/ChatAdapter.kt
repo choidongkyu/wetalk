@@ -186,6 +186,13 @@ class ChatAdapter(private val messageDatas: String, private var context: Context
     }
 
     private fun addMessageData(messageData: MessageData) {
+        if(messageData.type == MessageType.CENTER_MESSAGE) {
+            items.add(
+                ChatItem(messageData.name, messageData.id, messageData.content, messageData.sendTime.toDate(), ViewType.CENTER_MESSAGE)
+            )
+            return
+        }
+
         if (Util.getMyName(context) == messageData.name) { //자기 자신이 보낸 메시지라면
             if (messageData.type == MessageType.TEXT_MESSAGE) {
                 items.add(

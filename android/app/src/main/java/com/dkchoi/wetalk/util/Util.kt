@@ -7,17 +7,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.ContactsContract
 import android.telephony.TelephonyManager
-import android.util.Base64
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.lifecycleScope
-import androidx.room.Room
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
 import com.dkchoi.wetalk.data.PhoneBook
@@ -26,10 +20,6 @@ import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -272,7 +262,7 @@ class Util {
         //소켓으로 부터 들어온 메시지를 Room에 저장하는 메소드
         suspend fun saveMsgToLocalRoom(message: String, db: AppDatabase, context: Context) {
             val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
-            if (db.chatRoomDao()?.getRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
+            if (db.chatRoomDao()?.getRoomFromName(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
                 val ids: List<String> = getUserIdsFromRoomName(messageData.roomName)
                 val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
                 val imgPath = getRoomImagePath(messageData.roomName, context)
@@ -282,7 +272,7 @@ class Util {
                         null, 1, userList.toMutableList()) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
                 db.chatRoomDao().insertChatRoom(chatRoom)
             } else { //기존에 방이 존재한다면
-                val chatRoom = db.chatRoomDao().getRoom(messageData.roomName)
+                val chatRoom = db.chatRoomDao().getRoomFromName(messageData.roomName)
                 //chatroom에 메시지 추가
                 chatRoom.messageDatas =
                     chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
@@ -292,6 +282,9 @@ class Util {
                     db.chatRoomDao().updateChatRoom(it)
                 }
             }
+        }
+
+        fun joinUserInRoom(message: String) {
 
         }
     }
