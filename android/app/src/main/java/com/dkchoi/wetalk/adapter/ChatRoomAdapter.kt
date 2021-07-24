@@ -113,7 +113,7 @@ class ChatRoomAdapter() : RecyclerView.Adapter<ChatRoomAdapter.ViewHolder>() {
             itemView.setOnClickListener {
                 val intent = Intent(context, ChatActivity::class.java)
                 val chatRoom: ChatRoom = chatRoomList[adapterPosition]
-                intent.putExtra("chatRoom", chatRoom.roomName)
+                intent.putExtra("chatRoomId", chatRoom.roomId)
                 context.startActivity(intent)
             }
 

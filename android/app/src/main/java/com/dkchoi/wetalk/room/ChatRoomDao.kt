@@ -13,7 +13,7 @@ interface ChatRoomDao {
     fun getRoomFromName(roomName: String): ChatRoom
 
     @Query("SELECT * FROM ChatRoom WHERE roomId = :id") //roomName 으로 하나의 룸만 가져오는 쿼리
-    fun getRoomFromId(id: Int): ChatRoom
+    fun getRoomFromId(id: String): ChatRoom
 
     @Update
     fun updateChatRoom(chatRoom: ChatRoom) // 채팅방 업데이트

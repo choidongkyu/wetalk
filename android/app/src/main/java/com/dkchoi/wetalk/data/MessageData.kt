@@ -1,5 +1,7 @@
 package com.dkchoi.wetalk.data
 
+import java.util.*
+
 data class MessageData(
     val type: MessageType,
     val name: String,
@@ -7,5 +9,6 @@ data class MessageData(
     val content: String,
     val sendTime: Long,
     val roomName: String,
-    val roomTitle: String
+    val roomTitle: String,
+    val roomId: String
 )

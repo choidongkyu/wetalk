@@ -8,7 +8,6 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -140,8 +139,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_chat)
 
-        val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom
-        chatRoom = db?.chatRoomDao()?.getRoomFromName(chatRoomName)!!
+        val chatRoomId = intent.getStringExtra("chatRoomId") // 전달 받은 chatroom
+        chatRoom = db?.chatRoomDao()?.getRoomFromId(chatRoomId)!!
 
         toolBarSetting()
         recyclerViewBinding()
@@ -158,7 +157,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
                 if (pos == 0) {
                     val intent = Intent(this@ChatActivity, InviteActivity::class.java)
-                    intent.putExtra("chatRoom", chatRoom.roomName)
+                    intent.putExtra("chatRoomId", chatRoom.roomId)
                     startActivity(intent)
                     return
                 }
@@ -225,7 +224,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             "${Util.chatImgPath}/${chatRoom.roomName}/$request.jpg", // ex) +821026595819,+15555215558/2999919293.jpg
             System.currentTimeMillis(),
             chatRoom.roomName,
-            chatRoom.roomTitle
+            chatRoom.roomTitle,
+            chatRoom.roomId
         )
         val jsonMessage = gson.toJson(messageData) // message data를 json형태로 변환
 
@@ -260,7 +260,8 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             request,
             System.currentTimeMillis(),
             chatRoom.roomName,
-            chatRoom.roomTitle
+            chatRoom.roomTitle,
+            chatRoom.roomId
         )
         val jsonMessage = gson.toJson(messageData) // message data를 json형태로 변환
 
@@ -289,26 +290,17 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
     override fun onReceive(msg: String) {
         runOnUiThread {
-            var message = msg.replace("\r\n", "")
-            if (message.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
-                message = message.replace(JOIN_KEY, "") // 조인키 삭제
-                val tokens = message.split("::") // :: 기준으로 tokens[0]는 메시지, tokens[1]는 user 정보
-                val user = gson.fromJson(tokens[1], User::class.java)
-                addUser(user)
-                addCenterChat(tokens[0])
-            } else {
-                val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
-                db?.let { db ->
-                    if (messageData.name == getMyName(applicationContext)) return@runOnUiThread // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        saveMsgToLocalRoom(message, db, applicationContext)
-                        if (messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
-                            addChat(messageData) // 리사이클러뷰에 추가
-                            chatRoom.unReadCount = 0
-                            db.chatRoomDao().updateChatRoom(chatRoom)
-                        }
+            val message = msg.replace("\r\n", "")
+            val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+            db?.let { db ->
+                if (messageData.name == getMyName(applicationContext) && messageData.type != MessageType.CENTER_MESSAGE) return@runOnUiThread // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
+                lifecycleScope.launch(Dispatchers.Main) {
+                    saveMsgToLocalRoom(message, db, applicationContext)
+                    if (messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
+                        addChat(messageData) // 리사이클러뷰에 추가
+                        chatRoom.unReadCount = 0
+                        db.chatRoomDao().updateChatRoom(chatRoom)
                     }
-
                 }
             }
         }

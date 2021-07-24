@@ -31,9 +31,9 @@ class DirectReplyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         this.context = context
         val remoteInput: Bundle? = RemoteInput.getResultsFromIntent(intent)
-        val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom name
+        val chatRoomId = intent.getStringExtra("chatRoomId") // 전달 받은 chatroom name
         db?.let { db ->
-            chatRoom = db.chatRoomDao().getRoomFromName(chatRoomName)
+            chatRoom = db.chatRoomDao().getRoomFromId(chatRoomId)
         }
         remoteInput?.let {
             val replyText = remoteInput.getCharSequence(KEY_TEXT_REPLY)
@@ -52,7 +52,8 @@ class DirectReplyReceiver : BroadcastReceiver() {
             request,
             System.currentTimeMillis(),
             chatRoom.roomName,
-            chatRoom.roomTitle
+            chatRoom.roomTitle,
+            chatRoom.roomId
         )
         val jsonMessage = Util.gson.toJson(messageData) // message data를 json형태로 변환
 

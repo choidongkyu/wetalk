@@ -137,15 +137,6 @@ class SocketReceiveService : Service() {
     private fun onReceive(message: String) {
         db?.let {
             CoroutineScope(Dispatchers.IO).launch {
-                var msg = message.replace("\r\n", "")
-                if (msg.contains(JOIN_KEY)) { // join_key가 있다면 유저 입장 or 퇴장 메시지
-                    msg = msg.replace(JOIN_KEY, "") // 조인키 삭제
-                    val tokens = msg.split("::") // :: 기준으로 tokens[0]는 메시지, tokens[1]는 user 정보
-                    val user = Util.gson.fromJson(tokens[1], User::class.java)
-
-                    addCenterChat(tokens[0])
-                }
-
                 val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
                 if (messageData.name == Util.getMyName(applicationContext)) return@launch // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
                 saveMsgToLocalRoom(message, it, applicationContext)
@@ -196,7 +187,7 @@ class SocketReceiveService : Service() {
             }
 
 
-            val chatRoom = db?.chatRoomDao()?.getRoomFromName(messageData.roomName)
+            val chatRoom = db?.chatRoomDao()?.getRoomFromId(messageData.roomId)
             val pendingIntent =
                 getContentIntent(chatRoom) //notification 클릭시 액티비티로 이동할수 있도록 intent 생성
             builder.setContentIntent(pendingIntent)
@@ -242,7 +233,7 @@ class SocketReceiveService : Service() {
 
     private fun getContentIntent(chatRoom: ChatRoom?): PendingIntent? {
         val chatIntent = Intent(this@SocketReceiveService, ChatActivity::class.java)
-        chatIntent.putExtra("chatRoom", chatRoom?.roomName)
+        chatIntent.putExtra("chatRoomId", chatRoom?.roomId)
 
         return TaskStackBuilder.create(this@SocketReceiveService).run {
             // Add the intent, which inflates the back stack
@@ -260,7 +251,7 @@ class SocketReceiveService : Service() {
         }
 
         val replyIntent = Intent(applicationContext, DirectReplyReceiver::class.java)
-        replyIntent.putExtra("chatRoom", chatRoom?.roomName)
+        replyIntent.putExtra("chatRoomId", chatRoom?.roomId)
         val replyPendingIntent = PendingIntent.getBroadcast(
             applicationContext,
             0,

@@ -14,8 +14,8 @@ class ChatRoomViewModel(application: Application) : AndroidViewModel(application
         return db!!.chatRoomDao().getAll()
     }
 
-    fun getChatRoom(name: String): ChatRoom {
-        return db!!.chatRoomDao().getRoomFromName(name)
+    fun getChatRoom(id: String): ChatRoom {
+        return db!!.chatRoomDao().getRoomFromId(id)
     }
 
     suspend fun insertRoom(chatRoom: ChatRoom) {

@@ -27,6 +27,7 @@ import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.*
 
 
 class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener {
@@ -146,24 +147,26 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         }
         //서스펜드 함수이므로 코루틴 내에서 실행
         lifecycleScope.launch(Dispatchers.Default) {
-            if (chatRoomViewModel.getChatRoom(messageData.roomName) == null) { // 로컬 db에 존재하는 방이 없다면
+            if (chatRoomViewModel.getChatRoom(messageData.roomId) == null) { // 로컬 db에 존재하는 방이 없다면
                 val ids: List<String> = Util.getUserIdsFromRoomName(messageData.roomName)
                 val userList = server.getUserListByIds(ids) // room에 소속된 user list 가져옴
                 val imgPath = getRoomImagePath(messageData.roomName, applicationContext)
-                val chatRoom = ChatRoom("$message|", imgPath,
-                    null, 1, userList.toMutableList()) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
+                val chatRoom = ChatRoom(
+                    messageData.roomId, "$message|", imgPath,
+                    null, 1, userList.toMutableList()
+                ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
 
                 chatRoomViewModel.insertRoom(chatRoom)
             } else { //기존에 방이 존재한다면
-                val chatRoom = chatRoomViewModel.getChatRoom(messageData.roomName)
+                val chatRoom = chatRoomViewModel.getChatRoom(messageData.roomId)
                 //chatroom에 메시지 추가
                 chatRoom.messageDatas =
                     chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
                 chatRoom.unReadCount += 1
                 chatRoomViewModel.updateRoom(chatRoom)
             }
+            service?.showNotification(message) // 노티 띄워줌
         }
-        service?.showNotification(message) // 노티 띄워줌
     }
 }
 

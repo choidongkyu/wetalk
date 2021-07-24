@@ -1,12 +1,11 @@
 package com.dkchoi.wetalk
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.view.Menu
 import android.view.MenuItem
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dkchoi.wetalk.adapter.InviteFriendListAdapter
 import com.dkchoi.wetalk.data.ChatRoom
@@ -18,8 +17,6 @@ import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.RecyclerViewDecoration
 import com.dkchoi.wetalk.util.Util
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
@@ -56,15 +53,17 @@ class InviteActivity : AppCompatActivity() {
             binding.recyclerView.addItemDecoration(RecyclerViewDecoration(40)) // 아이템간 간격 설정
         }
 
-        val chatRoomName = intent.getStringExtra("chatRoom") // 전달 받은 chatroom
-        chatRoom = chatRoomDb?.chatRoomDao()?.getRoomFromName(chatRoomName)!!
+        val chatRoomId = intent.getStringExtra("chatRoomId") // 전달 받은 chatroom
+        chatRoom = chatRoomDb?.chatRoomDao()?.getRoomFromId(chatRoomId)!!
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_confirm -> {
                 val list = (binding.recyclerView.adapter as InviteFriendListAdapter).getCheckedList()
-                inviteUser(list)
+                Handler().postDelayed({
+                    inviteUser(list)
+                },1000)
                 finish()
                 return true
             }
@@ -85,8 +84,7 @@ class InviteActivity : AppCompatActivity() {
 
     private fun inviteUser(list: MutableList<User>) {
         chatRoom.userList.addAll(list)
-        chatRoom.updateRoomInfo()
-        chatRoomDb?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
+        chatRoom.updateRoomInfo()// userlist가 바뀜에 따라 roomName, roomTitle도 바뀌어야 하므로 updateRoomInfo
 
         //socket으로 메시지 send
         Thread(Runnable {
@@ -97,10 +95,27 @@ class InviteActivity : AppCompatActivity() {
                 true
             )
             for(user in list) {
-                val userData = Util.gson.toJson(user) // message data를 json형태로 변환
-                val message = "invite::${chatRoom.roomName}::${user.id}::${Util.getMyName(this)}::${userData}"
+                val inviteMessage = makeInviteMessage("${Util.getMyName(this)}님이 ${user.name}님을 초대하였습니다.")
+                val messageData = Util.gson.toJson(inviteMessage) // message data를 json형태로 변환
+                chatRoom.messageDatas =
+                    chatRoom.messageDatas + messageData + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+                chatRoomDb?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
+                val message = "invite::${chatRoom.roomName}::${user.id}::${messageData}"
                 pw.println(message)
             }
         }).start()
+    }
+
+    private fun makeInviteMessage(request: String): MessageData {
+        return MessageData(
+            MessageType.CENTER_MESSAGE,
+            Util.getMyName(this)!!,
+            Util.getPhoneNumber(this),
+            request,
+            System.currentTimeMillis(),
+            chatRoom.roomName,
+            chatRoom.roomTitle,
+            chatRoom.roomId
+        )
     }
 }

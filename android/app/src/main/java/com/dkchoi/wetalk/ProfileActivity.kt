@@ -18,6 +18,7 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 class ProfileActivity : AppCompatActivity() {
     private val db: AppDatabase? by lazy {
@@ -64,7 +65,7 @@ class ProfileActivity : AppCompatActivity() {
         binding.chatBtn.setOnClickListener {
             val chatRoom = createRoom()
             val intent = Intent(this, ChatActivity::class.java)
-            intent.putExtra("chatRoom", chatRoom.roomName)
+            intent.putExtra("chatRoomId", chatRoom.roomId)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
             finish()
@@ -72,17 +73,18 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun createRoom(): ChatRoom {
-        var roomName = "${user.id},${Util.getPhoneNumber(this)}" //roomName ex - +821093230128,+821026595819
+        var roomName =
+            "${user.id},${Util.getPhoneNumber(this)}" //roomName ex - +821093230128,+821026595819
         val roomNameArray = roomName.split(",").sorted() // room name 통일위하여 sort
         roomName = "${roomNameArray[0]},${roomNameArray[1]}"
         var chatRoom = db?.chatRoomDao()?.getRoomFromName(roomName)
 
         if (chatRoom == null) { //기존에 존재하는 room이 없을경우 room 생성
             val imgPath = "${Util.profileImgPath}/${user.id}.jpg"
-            val userList:MutableList<User> = mutableListOf<User>()
+            val userList: MutableList<User> = mutableListOf<User>()
             userList.add(Util.getMyUser(this))
             userList.add(user)
-            chatRoom = ChatRoom("", imgPath, null, 0, userList)
+            chatRoom = ChatRoom(UUID.randomUUID().toString(), "", imgPath, null, 0, userList)
             db?.chatRoomDao()?.insertChatRoom(chatRoom)
         }
 
