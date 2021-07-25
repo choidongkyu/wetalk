@@ -155,7 +155,6 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                     messageData.roomId, "$message|", imgPath,
                     null, 1, userList.toMutableList()
                 ) //adapter에서 끝에 '|' 문자를 제거하므로 |를 붙여줌 안붙인다면 괄호가 삭제되는 있으므로 | 붙여줌
-
                 chatRoomViewModel.insertRoom(chatRoom)
             } else { //기존에 방이 존재한다면
                 val chatRoom = chatRoomViewModel.getChatRoom(messageData.roomId)

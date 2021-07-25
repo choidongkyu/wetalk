@@ -24,7 +24,7 @@ class InviteFriendListAdapter(private val friendList: List<User>) :
     RecyclerView.Adapter<InviteFriendListAdapter.ViewHolder>() {
 
     private lateinit var context: Context
-    private val checkedList: MutableList<User> = mutableListOf()
+    private val checkedList: ArrayList<User> = arrayListOf()
 
 
 
@@ -57,7 +57,7 @@ class InviteFriendListAdapter(private val friendList: List<User>) :
         return friendList.size
     }
 
-    fun getCheckedList(): MutableList<User> {
+    fun getCheckedList(): ArrayList<User> {
         return checkedList
     }
 

@@ -12,10 +12,7 @@ import android.provider.ContactsContract
 import android.telephony.TelephonyManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.dkchoi.wetalk.data.ChatRoom
-import com.dkchoi.wetalk.data.MessageData
-import com.dkchoi.wetalk.data.PhoneBook
-import com.dkchoi.wetalk.data.User
+import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
@@ -275,6 +272,9 @@ class Util {
                 db.chatRoomDao().insertChatRoom(chatRoom)
             } else { //기존에 방이 존재한다면
                 val chatRoom = db.chatRoomDao().getRoomFromId(messageData.roomId)
+                if(messageData.type == MessageType.CENTER_MESSAGE) { // 초대 메시지 라면
+
+                }
                 //chatroom에 메시지 추가
                 chatRoom.messageDatas =
                     chatRoom.messageDatas + message + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
@@ -284,10 +284,6 @@ class Util {
                     db.chatRoomDao().updateChatRoom(it)
                 }
             }
-        }
-
-        fun joinUserInRoom(message: String) {
-
         }
     }
 }

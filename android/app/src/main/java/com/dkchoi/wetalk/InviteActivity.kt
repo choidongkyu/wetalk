@@ -1,5 +1,6 @@
 package com.dkchoi.wetalk
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -61,9 +62,12 @@ class InviteActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.action_confirm -> {
                 val list = (binding.recyclerView.adapter as InviteFriendListAdapter).getCheckedList()
-                Handler().postDelayed({
-                    inviteUser(list)
-                },1000)
+                //inviteUser(list)
+                val intent = Intent(this, ChatActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                intent.putExtra("inviteList", list)
+                intent.putExtra("chatRoomId", chatRoom.roomId)
+                startActivity(intent)
                 finish()
                 return true
             }
@@ -80,42 +84,5 @@ class InviteActivity : AppCompatActivity() {
         val menuInflater = menuInflater
         menuInflater.inflate(R.menu.invite_menu, menu)
         return true
-    }
-
-    private fun inviteUser(list: MutableList<User>) {
-        chatRoom.userList.addAll(list)
-        chatRoom.updateRoomInfo()// userlist가 바뀜에 따라 roomName, roomTitle도 바뀌어야 하므로 updateRoomInfo
-
-        //socket으로 메시지 send
-        Thread(Runnable {
-            val socket =
-                Socket(SocketReceiveService.SERVER_IP, SocketReceiveService.SERVER_PORT)
-            val pw = PrintWriter(
-                OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
-                true
-            )
-            for(user in list) {
-                val inviteMessage = makeInviteMessage("${Util.getMyName(this)}님이 ${user.name}님을 초대하였습니다.")
-                val messageData = Util.gson.toJson(inviteMessage) // message data를 json형태로 변환
-                chatRoom.messageDatas =
-                    chatRoom.messageDatas + messageData + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
-                chatRoomDb?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
-                val message = "invite::${chatRoom.roomName}::${user.id}::${messageData}"
-                pw.println(message)
-            }
-        }).start()
-    }
-
-    private fun makeInviteMessage(request: String): MessageData {
-        return MessageData(
-            MessageType.CENTER_MESSAGE,
-            Util.getMyName(this)!!,
-            Util.getPhoneNumber(this),
-            request,
-            System.currentTimeMillis(),
-            chatRoom.roomName,
-            chatRoom.roomTitle,
-            chatRoom.roomId
-        )
     }
 }

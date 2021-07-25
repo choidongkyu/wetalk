@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -145,6 +146,11 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         toolBarSetting()
         recyclerViewBinding()
 
+        if (intent.getSerializableExtra("inviteList") != null) {
+            val list = intent.getSerializableExtra("inviteList") as ArrayList<User>
+            inviteUser(list)
+        }
+
         roomFriendListAdapter.setOnItemClickListener(object :
             RoomFriendListAdapter.OnItemClickEventListener {
             override fun onItemClick(view: View, pos: Int) {
@@ -208,7 +214,6 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             chatRoom.unReadCount = 0
             db.chatRoomDao().updateChatRoom(chatRoom)
         }
-        (conversationRecyclerView.adapter as RoomFriendListAdapter).updateList(chatRoom.userList) // 친구 리스트 업데이트
     }
 
     override fun onPause() {
@@ -289,18 +294,28 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     }
 
     override fun onReceive(msg: String) {
-        runOnUiThread {
-            val message = msg.replace("\r\n", "")
-            val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+        lifecycleScope.launch(Dispatchers.Main) {
             db?.let { db ->
-                if (messageData.name == getMyName(applicationContext) && messageData.type != MessageType.CENTER_MESSAGE) return@runOnUiThread // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
-                lifecycleScope.launch(Dispatchers.Main) {
-                    saveMsgToLocalRoom(message, db, applicationContext)
-                    if (messageData.roomName == chatRoom.roomName) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
-                        addChat(messageData) // 리사이클러뷰에 추가
-                        chatRoom.unReadCount = 0
-                        db.chatRoomDao().updateChatRoom(chatRoom)
-                    }
+                var message = msg
+                if (msg.contains(JOIN_KEY)) {
+                    val tokens = msg.replace(JOIN_KEY, "").split("::")
+                    message = tokens[0] // message Data
+                    val user = gson.fromJson(tokens[1], User::class.java)
+                    chatRoom.userList.add(user)
+                    chatRoom.updateRoomInfo()
+                    (conversationRecyclerView.adapter as RoomFriendListAdapter).updateList(chatRoom.userList) // 친구 리스트 업데이트
+                    db.chatRoomDao().updateChatRoom(chatRoom)
+                }
+
+                val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+                if (messageData.name == getMyName(applicationContext) && messageData.type != MessageType.CENTER_MESSAGE) return@launch // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
+
+                saveMsgToLocalRoom(message, db, applicationContext)
+                if (messageData.roomId == chatRoom.roomId) { // 현재 activity에 있는 방과 소켓으로 들어온 메시지의 room이 같다면 ui에 추가
+                    addChat(messageData) // 리사이클러뷰에 추가
+                    chatRoom = db.chatRoomDao().getRoomFromId(messageData.roomId)
+                    chatRoom.unReadCount = 0
+                    db.chatRoomDao().updateChatRoom(chatRoom)
                 }
             }
         }
@@ -308,36 +323,43 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
     //상대방이 메시지 보낼 경우
     private fun addChat(messageData: MessageData) {
-        if (messageData.type == MessageType.TEXT_MESSAGE) {
-            chatAdapter.addItem(
-                ChatItem(
-                    messageData.name, messageData.id, messageData.content,
-                    messageData.sendTime.toDate(), ViewType.LEFT_MESSAGE
+        when (messageData.type) {
+            MessageType.CENTER_MESSAGE -> {
+                chatAdapter.addItem(
+                    ChatItem(
+                        "",
+                        "",
+                        messageData.content,
+                        "",
+                        ViewType.CENTER_MESSAGE
+                    )
                 )
-            )
-            binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
-        } else {
-            chatAdapter.addItem(
-                ChatItem(
-                    messageData.name, messageData.id, messageData.content,
-                    messageData.sendTime.toDate(), ViewType.LEFT_IMAGE
-                )
-            )
-            binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
-        }
-    }
+                binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
+                return
+            }
 
-    private fun addCenterChat(messageData: String) { //입장 및 퇴장시 추가되는 center 메시지
-        chatAdapter.addItem(
-            ChatItem(
-                "",
-                "",
-                messageData,
-                "",
-                ViewType.CENTER_MESSAGE
-            )
-        )
-        binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
+            MessageType.TEXT_MESSAGE -> {
+                chatAdapter.addItem(
+                    ChatItem(
+                        messageData.name, messageData.id, messageData.content,
+                        messageData.sendTime.toDate(), ViewType.LEFT_MESSAGE
+                    )
+                )
+                binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
+                return
+            }
+
+            MessageType.IMAGE_MESSAGE -> {
+                chatAdapter.addItem(
+                    ChatItem(
+                        messageData.name, messageData.id, messageData.content,
+                        messageData.sendTime.toDate(), ViewType.LEFT_IMAGE
+                    )
+                )
+                binding.chatRecyclerView.scrollToPosition(chatAdapter.itemCount - 1)
+                return
+            }
+        }
     }
 
 
@@ -430,12 +452,45 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         conversationRecyclerView.addItemDecoration(RecyclerViewDecoration(40)) // 아이템간 간격 설정
     }
 
-    private fun addUser(user: User) {
-        db?.let { db ->
-            chatRoom.userList.add(user)
-            db.chatRoomDao().updateChatRoom(chatRoom)
-            (conversationRecyclerView.adapter as RoomFriendListAdapter).updateList(chatRoom.userList) // 친구 리스트 업데이트
-            chatRoom.updateRoomInfo()
-        }
+    private fun inviteUser(list: ArrayList<User>) {
+        chatRoom.userList.addAll(list)
+        chatRoom.updateRoomInfo()// userlist가 바뀜에 따라 roomName, roomTitle도 바뀌어야 하므로 updateRoomInfo
+        (conversationRecyclerView.adapter as RoomFriendListAdapter).updateList(chatRoom.userList) // 친구 리스트 업데이트
+        db?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
+
+        //socket으로 메시지 send
+        Thread(Runnable {
+            val socket =
+                Socket(SocketReceiveService.SERVER_IP, SocketReceiveService.SERVER_PORT)
+            val pw = PrintWriter(
+                OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8),
+                true
+            )
+            for (user in list) {
+                val inviteMessage =
+                    makeInviteMessage("${Util.getMyName(this)}님이 ${user.name}님을 초대하였습니다.")
+                val messageData = gson.toJson(inviteMessage) // message data를 json형태로 변환
+                val userJson = gson.toJson(user)
+                chatRoom.messageDatas =
+                    chatRoom.messageDatas + messageData + "|" //"," 기준으로 message를 구분하기 위해 끝에 | 를 붙여줌
+                db?.chatRoomDao()?.updateChatRoom(chatRoom) //로컬db에 메시지 저장
+                val message =
+                    "invite::${chatRoom.roomName}::${user.id}::${messageData}::${userJson}"
+                pw.println(message)
+            }
+        }).start()
+    }
+
+    private fun makeInviteMessage(request: String): MessageData {
+        return MessageData(
+            MessageType.CENTER_MESSAGE,
+            Util.getMyName(this)!!,
+            Util.getPhoneNumber(this),
+            request,
+            System.currentTimeMillis(),
+            chatRoom.roomName,
+            chatRoom.roomTitle,
+            chatRoom.roomId
+        )
     }
 }
