@@ -283,9 +283,12 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         lifecycleScope.launch(Dispatchers.Main) {
             db?.let { db ->
                 var message = msg
+                lateinit var messageData: MessageData
                 if (msg.contains(JOIN_KEY)) {
                     val tokens = msg.replace(JOIN_KEY, "").split("::")
                     message = tokens[0] // message Data
+                    messageData = gson.fromJson(message, MessageData::class.java)
+                    if (messageData.id == getPhoneNumber(this@ChatActivity)) return@launch
                     val user = gson.fromJson(tokens[1], User::class.java)
                     chatRoom.userList.add(user)
                     chatRoom.updateRoomInfo()
@@ -293,7 +296,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
                     db.chatRoomDao().updateChatRoom(chatRoom)
                 }
 
-                val messageData: MessageData = gson.fromJson(message, MessageData::class.java)
+                messageData = gson.fromJson(message, MessageData::class.java)
                 if (messageData.name == getMyName(applicationContext) && messageData.type != MessageType.CENTER_MESSAGE) return@launch // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
 
                 saveMsgToLocalRoom(message, db, applicationContext)
