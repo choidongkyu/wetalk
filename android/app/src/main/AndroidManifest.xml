@@ -22,7 +22,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeTalk"
         android:usesCleartextTraffic="true">
-        <activity android:name=".InviteActivity"></activity>
+        <activity android:name=".VideoCallActivity"></activity>
+        <activity android:name=".InviteActivity" />
 
         <receiver
             android:name=".DirectReplyReceiver"
