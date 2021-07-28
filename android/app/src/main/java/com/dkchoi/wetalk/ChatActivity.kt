@@ -283,6 +283,9 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         lifecycleScope.launch(Dispatchers.Main) {
             db?.let { db ->
                 var message = msg
+                if(message.split("::")[0] == "call") { //전화 관련 메시지 일경우
+                    return@launch
+                }
                 lateinit var messageData: MessageData
                 if (msg.contains(JOIN_KEY)) {
                     val tokens = msg.replace(JOIN_KEY, "").split("::")

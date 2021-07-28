@@ -25,6 +25,7 @@ import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.room.AppDatabase
 import com.dkchoi.wetalk.util.Util
+import com.dkchoi.wetalk.util.Util.Companion.gson
 import com.dkchoi.wetalk.util.Util.Companion.saveMsgToLocalRoom
 import kotlinx.coroutines.*
 import java.io.*
@@ -137,6 +138,9 @@ class SocketReceiveService : Service() {
     private fun onReceive(message: String) {
         db?.let {
             CoroutineScope(Dispatchers.IO).launch {
+                if(message.split("::")[0] == "call") { //전화 관련 메시지 일경우
+                    return@launch
+                }
                 val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
                 if (messageData.name == Util.getMyName(applicationContext)) return@launch // 자기 자신이 보낸 메시지도 소켓으로 통해 들어오므로 필터링
                 saveMsgToLocalRoom(message, it, applicationContext)

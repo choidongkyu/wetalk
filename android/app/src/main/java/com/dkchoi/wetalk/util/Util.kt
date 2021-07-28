@@ -1,9 +1,11 @@
 package com.dkchoi.wetalk.util
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -12,6 +14,7 @@ import android.provider.ContactsContract
 import android.telephony.TelephonyManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.dkchoi.wetalk.VideoCallActivity
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
@@ -272,7 +275,7 @@ class Util {
                 db.chatRoomDao().insertChatRoom(chatRoom)
             } else { //기존에 방이 존재한다면
                 val chatRoom = db.chatRoomDao().getRoomFromId(messageData.roomId)
-                if(messageData.type == MessageType.CENTER_MESSAGE) { // 초대 메시지 라면
+                if (messageData.type == MessageType.CENTER_MESSAGE) { // 초대 메시지 라면
 
                 }
                 //chatroom에 메시지 추가
@@ -284,6 +287,19 @@ class Util {
                     db.chatRoomDao().updateChatRoom(it)
                 }
             }
+        }
+
+        fun openVideoActivity(
+            context: Activity,
+            channelId: String,
+            action: CallAction,
+            user: User
+        ) {
+            val intent = Intent(context, VideoCallActivity::class.java)
+            intent.putExtra("channelId", channelId)
+            intent.putExtra("action", action)
+            intent.putExtra("user", user)
+            context.startActivity(intent)
         }
     }
 }

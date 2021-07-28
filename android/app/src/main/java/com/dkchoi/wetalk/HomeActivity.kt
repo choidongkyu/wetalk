@@ -12,8 +12,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.dkchoi.wetalk.data.CallAction
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.MessageData
+import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.databinding.ActivityHomeBinding
 import com.dkchoi.wetalk.fragment.ChatRoomFragment
 import com.dkchoi.wetalk.fragment.HomeFragment
@@ -23,6 +25,7 @@ import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
+import com.dkchoi.wetalk.util.Util.Companion.openVideoActivity
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.Dispatchers
@@ -140,6 +143,13 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
     private fun receiveMessage(msg: String) {
         val message = msg.replace("\r\n", "")// \r\n 제거
+        if(msg.split("::")[0] == "call") { //전화 관련 메시지 일경우
+            val videoMsg = message.split("::") // msg[1] 채널 id, msg[2] user data
+            val user = Util.gson.fromJson(videoMsg[2], User::class.java)
+            openVideoActivity(this, videoMsg[1], CallAction.RECEIVE, user)
+            return
+        }
+
         val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)
 
         if (messageData.name == Util.getMyName(this)) { // 자신이 보낸 메시지라면 무시

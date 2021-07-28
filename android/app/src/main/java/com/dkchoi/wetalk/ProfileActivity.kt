@@ -1,12 +1,15 @@
 package com.dkchoi.wetalk
 
+import android.Manifest
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.signature.ObjectKey
+import com.dkchoi.wetalk.data.CallAction
 import com.dkchoi.wetalk.data.ChatRoom
 import com.dkchoi.wetalk.data.User
 import com.dkchoi.wetalk.databinding.ActivityProfileBinding
@@ -21,6 +24,11 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 class ProfileActivity : AppCompatActivity() {
+    private val permissions = arrayOf<String>(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+    )
+
     private val db: AppDatabase? by lazy {
         AppDatabase.getInstance(this, "chatRoom-database")
     }
@@ -69,6 +77,14 @@ class ProfileActivity : AppCompatActivity() {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
             finish()
+        }
+
+        binding.videoBtn.setOnClickListener {
+            if(!Util.hasPermissions(permissions, this)) { //권한이 없는 경우
+                ActivityCompat.requestPermissions(this@ProfileActivity, permissions, 1) //권한 요청
+                return@setOnClickListener
+            }
+            Util.openVideoActivity(this, UUID.randomUUID().toString(), CallAction.CALL, user)
         }
     }
 

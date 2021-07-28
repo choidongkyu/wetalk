@@ -6,14 +6,13 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".VideoCallActivity">
+        tools:context=".VideoCallActivity"
+        android:background="@color/black">
 
         <org.webrtc.SurfaceViewRenderer
             android:id="@+id/remote_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:layout_editor_absoluteX="16dp"
-            tools:layout_editor_absoluteY="26dp" />
+            android:layout_height="match_parent" />
 
         <org.webrtc.SurfaceViewRenderer
             android:id="@+id/local_view"
@@ -48,15 +47,16 @@
             android:id="@+id/name_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="혜니"
+            android:layout_marginTop="60dp"
             android:textColor="@color/white"
             android:textSize="40sp"
-            android:layout_marginTop="60dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="혜니" />
 
         <TextView
+            android:id="@+id/connection_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="연결중입니다."
@@ -67,10 +67,11 @@
             app:layout_constraintTop_toBottomOf="@+id/name_text" />
 
         <TextView
+            android:id="@+id/receive_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="전화가 왔습니다."
-            android:textColor="#ACAAAA"
+            android:textColor="#8E8D8D"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

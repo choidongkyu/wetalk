@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.telephony.TelephonyManager
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -30,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         server = ServiceGenerator.retrofit.create(BackendInterface::class.java)
 
-        val registerButton = findViewById<MaterialButton>(R.id.register_button)
+        val registerButton = findViewById<Button>(R.id.register_button)
         registerButton.setOnClickListener {
             val intent: Intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         val phoneNumber: String = Util.getPhoneNumber(this)
 
-        val loginButton = findViewById<MaterialButton>(R.id.login_button)
+        val loginButton = findViewById<Button>(R.id.login_button)
         loginButton.setOnClickListener {
             server.duplicateCheck(phoneNumber).enqueue(object : Callback<Int> { //id 존재하는지 서버에 요청
                 override fun onResponse(call: Call<Int>, response: Response<Int>) {

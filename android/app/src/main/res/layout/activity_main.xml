@@ -44,7 +44,7 @@
         app:layout_constraintTop_toBottomOf="@+id/welcome_textView" />
 
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/login_button"
         android:layout_width="270dp"
         android:layout_height="60dp"
@@ -57,7 +57,7 @@
         app:layout_constraintStart_toStartOf="parent"/>
 
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/register_button"
         android:layout_width="270dp"
         android:layout_height="60dp"
