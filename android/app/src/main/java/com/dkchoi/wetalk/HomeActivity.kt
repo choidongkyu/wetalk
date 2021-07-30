@@ -1,5 +1,6 @@
 package com.dkchoi.wetalk
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -8,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -25,6 +27,7 @@ import com.dkchoi.wetalk.retrofit.ServiceGenerator
 import com.dkchoi.wetalk.service.SocketReceiveService
 import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
+import com.dkchoi.wetalk.util.Util.Companion.hasPermissions
 import com.dkchoi.wetalk.util.Util.Companion.openVideoActivity
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
@@ -37,6 +40,11 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
     private val HOME_CONTAINER = 0
     private val CHAT_CONTAINER = 1
     private val PROFILE_CONTAINER = 2
+
+    private val permissions = arrayOf<String>(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+    )
 
     private lateinit var binding: ActivityHomeBinding
     private lateinit var homeFragment: HomeFragment
@@ -114,11 +122,6 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
         startService(Intent(applicationContext, SocketReceiveService::class.java)) // 소켓 서비스 시작
         bindService(Intent(this, SocketReceiveService::class.java), connection, BIND_AUTO_CREATE)
-
-//        user = Util.getMyUser(this)
-//        mainReceiveThread = MainReceiveThread.getInstance(user) // 소켓 통신위한 쓰레드 생성
-//        mainReceiveThread.setListener(this)
-//        mainReceiveThread.start() // 소켓 연결
     }
 
     override fun onResume() {
@@ -143,7 +146,11 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
     private fun receiveMessage(msg: String) {
         val message = msg.replace("\r\n", "")// \r\n 제거
-        if(msg.split("::")[0] == "call") { //전화 관련 메시지 일경우
+        if (msg.split("::")[0] == "call") { //전화 관련 메시지 일경우
+            if (!hasPermissions(permissions, this)) {
+                Toast.makeText(this, "영상통화가 수신되었으나 권한이 없으므로 영상통화를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                return
+            }
             val videoMsg = message.split("::") // msg[1] 채널 id, msg[2] user data
             val user = Util.gson.fromJson(videoMsg[2], User::class.java)
             openVideoActivity(this, videoMsg[1], CallAction.RECEIVE, user)
