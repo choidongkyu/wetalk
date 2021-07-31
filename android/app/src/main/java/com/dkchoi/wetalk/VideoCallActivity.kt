@@ -49,6 +49,7 @@ class VideoCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
             .build()
         remonCall?.connect(channelId)
 
+
         remonCall?.onClose {
             //상대방이 종료했을 경우
             Toast.makeText(this, "통화를 종료 합니다.", Toast.LENGTH_SHORT).show()
