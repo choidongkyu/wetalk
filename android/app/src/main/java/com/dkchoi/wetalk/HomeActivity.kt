@@ -29,6 +29,7 @@ import com.dkchoi.wetalk.util.Util
 import com.dkchoi.wetalk.util.Util.Companion.getRoomImagePath
 import com.dkchoi.wetalk.util.Util.Companion.hasPermissions
 import com.dkchoi.wetalk.util.Util.Companion.openVideoActivity
+import com.dkchoi.wetalk.util.Util.Companion.openVoiceReceiveActivity
 import com.dkchoi.wetalk.viewmodel.ChatRoomViewModel
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.Dispatchers
@@ -146,7 +147,7 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
 
     private fun receiveMessage(msg: String) {
         val message = msg.replace("\r\n", "")// \r\n 제거
-        if (msg.split("::")[0] == "call") { //전화 관련 메시지 일경우
+        if (msg.split("::")[0] == "videoCall") { //video 전화 관련 메시지 일경우
             if (!hasPermissions(permissions, this)) {
                 Toast.makeText(this, "영상통화가 수신되었으나 권한이 없으므로 영상통화를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 return
@@ -154,6 +155,18 @@ class HomeActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
             val videoMsg = message.split("::") // msg[1] 채널 id, msg[2] user data
             val user = Util.gson.fromJson(videoMsg[2], User::class.java)
             openVideoActivity(this, videoMsg[1], CallAction.RECEIVE, user)
+            return
+        }
+
+        if (msg.split("::")[0] == "voiceCall") { //전화 관련 메시지 일경우
+            if (!hasPermissions(permissions, this)) {
+                Toast.makeText(this, "영상통화가 수신되었으나 권한이 없으므로 영상통화를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val voiceMsg = message.split("::") // msg[1] 채널 id, msg[2] user data
+            val user = Util.gson.fromJson(voiceMsg[2], User::class.java)
+            //openVideoActivity(this, videoMsg[1], CallAction.RECEIVE, user)
+            openVoiceReceiveActivity(this, voiceMsg[1], user)
             return
         }
 

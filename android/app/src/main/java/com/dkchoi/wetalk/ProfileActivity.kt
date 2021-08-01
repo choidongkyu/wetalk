@@ -86,6 +86,14 @@ class ProfileActivity : AppCompatActivity() {
             }
             Util.openVideoActivity(this, UUID.randomUUID().toString(), CallAction.CALL, user)
         }
+
+        binding.callBtn.setOnClickListener {
+            if(!Util.hasPermissions(permissions, this)) { //권한이 없는 경우
+                ActivityCompat.requestPermissions(this@ProfileActivity, permissions, 1) //권한 요청
+                return@setOnClickListener
+            }
+            Util.openVoiceActivity(this, UUID.randomUUID().toString(), CallAction.CALL, user)
+        }
     }
 
     private fun createRoom(): ChatRoom {

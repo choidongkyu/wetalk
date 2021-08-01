@@ -283,7 +283,7 @@ class ChatActivity : AppCompatActivity(), SocketReceiveService.IReceiveListener 
         lifecycleScope.launch(Dispatchers.Main) {
             db?.let { db ->
                 var message = msg
-                if(message.split("::")[0] == "call") { //전화 관련 메시지 일경우
+                if(message.split("::")[0] == "videoCall" || message.split("::")[0] == "voiceCall") { //전화 관련 메시지 일경우
                     return@launch
                 }
                 lateinit var messageData: MessageData

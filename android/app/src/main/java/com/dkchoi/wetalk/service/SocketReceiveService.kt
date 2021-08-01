@@ -138,7 +138,7 @@ class SocketReceiveService : Service() {
     private fun onReceive(message: String) {
         db?.let {
             CoroutineScope(Dispatchers.IO).launch {
-                if(message.split("::")[0] == "call") { //전화 관련 메시지 일경우
+                if(message.split("::")[0] == "videoCall" || message.split("::")[0] == "voiceCall") { //전화 관련 메시지 일경우
                     return@launch
                 }
                 val messageData: MessageData = Util.gson.fromJson(message, MessageData::class.java)

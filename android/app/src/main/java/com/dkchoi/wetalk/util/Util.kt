@@ -15,6 +15,8 @@ import android.telephony.TelephonyManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.dkchoi.wetalk.VideoCallActivity
+import com.dkchoi.wetalk.VoiceCallActivity
+import com.dkchoi.wetalk.VoiceReceiveActivity
 import com.dkchoi.wetalk.data.*
 import com.dkchoi.wetalk.retrofit.BackendInterface
 import com.dkchoi.wetalk.retrofit.ServiceGenerator
@@ -296,6 +298,27 @@ class Util {
             user: User
         ) {
             val intent = Intent(context, VideoCallActivity::class.java)
+            intent.putExtra("channelId", channelId)
+            intent.putExtra("action", action)
+            intent.putExtra("user", user)
+            context.startActivity(intent)
+        }
+
+        fun openVoiceReceiveActivity(context: Activity, channelId: String, user: User) {
+            val intent = Intent(context, VoiceReceiveActivity::class.java)
+            intent.putExtra("channelId", channelId)
+            intent.putExtra("user", user)
+            context.startActivity(intent)
+        }
+
+        fun openVoiceActivity(
+            context: Activity,
+            channelId: String,
+            action: CallAction,
+            user: User
+        ) {
+            val intent = Intent(context, VoiceCallActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             intent.putExtra("channelId", channelId)
             intent.putExtra("action", action)
             intent.putExtra("user", user)

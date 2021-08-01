@@ -35,8 +35,6 @@ class VideoCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
         opponentUser = intent.getParcelableExtra("user") as User
         channelId = intent.getStringExtra("channelId")
 
-        updateView(false)
-
         remonCall = RemonCall.builder()
             .context(this)
             .serviceId("SERVICEID1")
@@ -49,6 +47,7 @@ class VideoCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
             .build()
         remonCall?.connect(channelId)
 
+        updateView(false)
 
         remonCall?.onClose {
             //상대방이 종료했을 경우
@@ -110,7 +109,7 @@ class VideoCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
     private fun sendReceiveCall() {
         updateView(true)
         lifecycleScope.launch(Dispatchers.Default) {
-            val message = "receiveCall::${opponentUser.id}"
+            val message = "receiveVideoCall::${opponentUser.id}"
             val socket =
                 Socket(SocketReceiveService.SERVER_IP, SocketReceiveService.SERVER_PORT)
             val pw = PrintWriter(
@@ -127,7 +126,7 @@ class VideoCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
     }
 
     override fun onReceive(msg: String) {
-        if(msg == "receiveCall") {
+        if(msg == "receiveVideoCall") {
             runOnUiThread {
                 updateView(true)
             }

@@ -1,110 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".VoiceCallActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <ImageView
-        android:id="@+id/profile_img"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_marginTop="40dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_account_circle_24" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".VoiceCallActivity">
 
-    <TextView
-        android:id="@+id/name_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:padding="5dp"
-        android:textSize="30sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/profile_img"
-        tools:text="혜니" />
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/remote_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/time_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="0:03"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/name_text" />
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/local_view"
+            android:layout_width="120dp"
+            android:layout_height="160dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/face_talk_bt"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/facetalk_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/speaker_bt"
-        app:layout_constraintTop_toTopOf="@+id/speaker_bt" />
+        <ImageView
+            android:id="@+id/profile_img"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_account_circle_24" />
 
-    <Button
-        android:id="@+id/speaker_bt"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginTop="90dp"
-        android:background="@drawable/speaker_icon"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time_text" />
+        <TextView
+            android:id="@+id/name_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:textColor="@color/black"
+            android:textSize="30sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profile_img"
+            tools:text="혜니" />
 
-    <Button
-        android:id="@+id/mute_bt"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/mute_icon"
-        app:layout_constraintEnd_toStartOf="@+id/speaker_bt"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/speaker_bt" />
+        <TextView
+            android:id="@+id/conn_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="연결 중입니다."
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/name_text"/>
 
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="음소거"
-        android:textSize="15sp"
-        android:layout_marginTop="5dp"
-        app:layout_constraintEnd_toEndOf="@+id/mute_bt"
-        app:layout_constraintStart_toStartOf="@+id/mute_bt"
-        app:layout_constraintTop_toBottomOf="@+id/mute_bt" />
+        <Button
+            android:id="@+id/face_talk_bt"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@drawable/facetalk_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/speaker_bt"
+            app:layout_constraintTop_toTopOf="@+id/speaker_bt" />
 
-    <TextView
-        android:id="@+id/textView5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="스피커"
-        android:textSize="15sp"
-        android:layout_marginTop="5dp"
-        app:layout_constraintEnd_toEndOf="@+id/speaker_bt"
-        app:layout_constraintStart_toStartOf="@+id/speaker_bt"
-        app:layout_constraintTop_toBottomOf="@+id/speaker_bt" />
+        <Button
+            android:id="@+id/speaker_bt"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="90dp"
+            android:background="@drawable/speaker_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/conn_text" />
 
-    <TextView
-        android:id="@+id/textView6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:text="페이스톡"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="@+id/face_talk_bt"
-        app:layout_constraintStart_toStartOf="@+id/face_talk_bt"
-        app:layout_constraintTop_toBottomOf="@+id/face_talk_bt" />
+        <Button
+            android:id="@+id/mute_bt"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@drawable/mute_icon"
+            app:layout_constraintEnd_toStartOf="@+id/speaker_bt"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/speaker_bt" />
 
-    <Button
-        android:id="@+id/end_call_btn"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/end_call"
-        android:layout_marginBottom="60dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="음소거"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="@+id/mute_bt"
+            app:layout_constraintStart_toStartOf="@+id/mute_bt"
+            app:layout_constraintTop_toBottomOf="@+id/mute_bt" />
+
+        <TextView
+            android:id="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="스피커"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="@+id/speaker_bt"
+            app:layout_constraintStart_toStartOf="@+id/speaker_bt"
+            app:layout_constraintTop_toBottomOf="@+id/speaker_bt" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="페이스톡"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="@+id/face_talk_bt"
+            app:layout_constraintStart_toStartOf="@+id/face_talk_bt"
+            app:layout_constraintTop_toBottomOf="@+id/face_talk_bt" />
+
+        <Button
+            android:id="@+id/end_call_btn"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginBottom="60dp"
+            android:background="@drawable/end_call"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
