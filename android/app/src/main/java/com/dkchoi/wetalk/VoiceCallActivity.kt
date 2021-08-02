@@ -3,6 +3,7 @@ package com.dkchoi.wetalk
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
@@ -35,6 +36,8 @@ class VoiceCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
         opponentUser = intent.getParcelableExtra("user") as User
         channelId = intent.getStringExtra("channelId")
 
+        initView()
+
         remonCall = RemonCall.builder()
             .context(this)
             .serviceId("SERVICEID1")
@@ -62,6 +65,28 @@ class VoiceCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
         }
     }
 
+    private fun initView() {
+        binding.muteBt.setOnClickListener {
+            if (binding.muteBt.isChecked) {
+                binding.muteBt.setBackgroundResource(R.drawable.pressed_mute_icon)
+                remonCall?.setMicMute(true)
+            } else {
+                binding.muteBt.setBackgroundResource(R.drawable.mute_icon)
+                remonCall?.setMicMute(false)
+            }
+        }
+
+        binding.speakerBt.setOnClickListener {
+            if (binding.speakerBt.isChecked) {
+                binding.speakerBt.setBackgroundResource(R.drawable.pressed_speaker_icon)
+                remonCall?.setSpeakerphoneOn(true)
+            } else {
+                binding.speakerBt.setBackgroundResource(R.drawable.speaker_icon)
+                remonCall?.setSpeakerphoneOn(false)
+            }
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     private fun updateView(connected: Boolean) {
         binding.nameText.text = opponentUser.name
@@ -73,7 +98,10 @@ class VoiceCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
             .into(binding.profileImg)
 
         if (connected) { //연결이 됬을 경우
-            binding.connText.text = "0.03" // todo 해당 부분 timer로 바꿔야 함
+            binding.connText.visibility = View.GONE
+            binding.chronometer.visibility = View.VISIBLE
+            binding.chronometer.base = SystemClock.elapsedRealtime()
+            binding.chronometer.start()
             return
         }
 
@@ -135,5 +163,10 @@ class VoiceCallActivity : AppCompatActivity(), SocketReceiveService.IReceiveList
     override fun onPause() {
         super.onPause()
         HomeActivity.service?.registerListener(null)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.chronometer.stop()
     }
 }

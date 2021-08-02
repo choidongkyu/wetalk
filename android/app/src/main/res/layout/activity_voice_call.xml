@@ -53,29 +53,45 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/name_text"/>
 
-        <Button
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:format="%s"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/name_text"
+            android:visibility="gone"/>
+
+        <ToggleButton
             android:id="@+id/face_talk_bt"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:background="@drawable/facetalk_icon"
+            android:textOff=""
+            android:textOn=""
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/speaker_bt"
             app:layout_constraintTop_toTopOf="@+id/speaker_bt" />
 
-        <Button
+        <ToggleButton
             android:id="@+id/speaker_bt"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_marginTop="90dp"
+            android:textOff=""
+            android:textOn=""
             android:background="@drawable/speaker_icon"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/conn_text" />
 
-        <Button
+        <ToggleButton
             android:id="@+id/mute_bt"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:textOff=""
+            android:textOn=""
             android:background="@drawable/mute_icon"
             app:layout_constraintEnd_toStartOf="@+id/speaker_bt"
             app:layout_constraintStart_toStartOf="parent"
