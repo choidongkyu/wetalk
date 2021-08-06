@@ -5,12 +5,4 @@ class PhoneBook {
     var id: String? = null
     var name: String? = null
     var tel: String? = null
-
-    constructor()
-
-    constructor(id: String?, name: String?, tel: String?) {
-        this.id = id
-        this.name = name
-        this.tel = tel
-    }
 }
